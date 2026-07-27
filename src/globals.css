@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 248 250 252; /* slate-50 */
+    --foreground: 15 23 42;    /* slate-900 */
+    --card: 255 255 255;       /* white */
+    --card-foreground: 15 23 42;
+    --primary: 79 70 229;      /* indigo-600 */
+    --primary-foreground: 255 255 255;
+    --muted: 241 245 249;      /* slate-100 */
+    --muted-foreground: 71 85 105; /* slate-600 */
+    --border: 226 232 240;     /* slate-200 */
+    --ring: 79 70 229;         /* indigo-600 */
+  }
+
+  body {
+    background-color: rgb(var(--background));
+    color: rgb(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1; /* Improves font rendering */
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
