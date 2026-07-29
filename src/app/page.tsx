@@ -1,71 +1,77 @@
 // src/app/page.tsx
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter
-} from "@/components/ui/Card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
+import { Loader2 } from "lucide-react";
 
 export default function Home() {
+  const router = useRouter();
   const { isAuthenticated, user, isLoading } = useAuthStore();
 
+  // 1. Show a loading state while Zustand checks the cookie
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+      </div>
+    );
+  }
+
+  // 2. DASHBOARD VIEW (If the user is logged in)
+  if (isAuthenticated && user) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-slate-50">
+        <Card className="w-full max-w-2xl text-center">
+          <CardHeader>
+            <CardTitle className="text-3xl font-bold text-transparent bg-clip-text bg-brand-gradient">
+              Welcome back, {user.name}!
+            </CardTitle>
+            <CardDescription>
+              You are successfully logged into LastCall.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <p className="text-slate-600">
+              Your current available balance is{" "}
+              <span className="font-bold text-success-dark">${user.availableBalance.toFixed(2)}</span>.
+            </p>
+            <div className="flex justify-center gap-4 pt-4">
+              <Button onClick={() => router.push("/auctions")}>
+                Browse Auctions
+              </Button>
+              <Button variant="outline" onClick={() => router.push("/profile")}>
+                My Profile
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  // 3. LANDING PAGE VIEW (If the user is a guest)
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-slate-50">
-
-      {/* Using our new Compound Card Component */}
-      <Card className="w-full max-w-md">
-
-        <CardHeader className="text-center space-y-1">
-          <CardTitle className="text-3xl font-bold text-transparent bg-clip-text bg-brand-gradient">
+      <Card className="w-full max-w-md text-center">
+        <CardHeader>
+          <CardTitle className="text-4xl font-bold text-transparent bg-clip-text bg-brand-gradient">
             LastCall
           </CardTitle>
-          <CardDescription>
-            Phase 3: Design System & Compound Components
+          <CardDescription className="text-lg">
+            The premium real-time auction platform.
           </CardDescription>
         </CardHeader>
-
         <CardContent className="space-y-4">
-          {/* Testing Input and Label */}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <Input id="email" type="email" placeholder="you@example.com" />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" placeholder="••••••••" />
-          </div>
-        </CardContent>
-
-        <CardFooter className="flex flex-col gap-3">
-          <Button variant="default" className="w-full">
+          <Button className="w-full" onClick={() => router.push("/login")}>
             Sign In
           </Button>
-
-          <Button variant="outline" className="w-full">
-            Create Account
+          <Button variant="outline" className="w-full" onClick={() => router.push("/register")}>
+            Create an Account
           </Button>
-        </CardFooter>
-
-        {/* Zustand State Check */}
-        <div className="px-6 pb-6 text-center border-t border-slate-100 pt-4">
-          {isLoading ? (
-            <p className="text-sm text-slate-400">Checking auth...</p>
-          ) : isAuthenticated && user ? (
-            <p className="text-sm text-success-dark font-medium">✅ Logged in as {user.name}</p>
-          ) : (
-            <p className="text-sm text-slate-400">👤 Not logged in</p>
-          )}
-        </div>
-
+        </CardContent>
       </Card>
     </main>
   );
