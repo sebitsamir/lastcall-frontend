@@ -1,74 +1,112 @@
-// src/app/(main)/auctions/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { IAuction } from "@/types";
 import { auctionService } from "@/services/auctionService";
 import { AuctionCard } from "@/components/auction/AuctionCard";
-import { Loader2, Search } from "lucide-react";
-import { Input } from "@/components/ui/Input";
+import { AuctionFilters } from "@/components/auction/AuctionFilters";
+import { useDebounce } from "@/hooks/useDebounce";
+import { Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function AuctionsPage() {
     const [auctions, setAuctions] = useState<IAuction[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
+    const [filters, setFilters] = useState({
+        search: "",
+        category: "all",
+        minPrice: "",
+        maxPrice: "",
+        sortBy: "newest",
+    });
 
-    // 1. Fetch Data on Mount
+    const debouncedFilters = useDebounce(filters, 500);
+
     useEffect(() => {
         const fetchAuctions = async () => {
+            setIsLoading(true);
             try {
-                const data = await auctionService.getActiveAuctions();
-                setAuctions(data);
+                const apiFilters = {
+                    category: filters.category !== "all" ? filters.category : undefined,
+                    sortBy: filters.sortBy as any,
+                    search: debouncedFilters.search || undefined,
+                    minPrice: debouncedFilters.minPrice ? Number(debouncedFilters.minPrice) : undefined,
+                    maxPrice: debouncedFilters.maxPrice ? Number(debouncedFilters.maxPrice) : undefined,
+                };
+                const data = await auctionService.getActiveAuctions(apiFilters);
+                setAuctions(Array.isArray(data) ? data : []);
             } catch (error) {
-                console.error("Failed to fetch auctions:", error);
+                setAuctions([]);
             } finally {
                 setIsLoading(false);
             }
         };
-
         fetchAuctions();
-    }, []);
+    }, [debouncedFilters, filters.category, filters.sortBy]);
 
-    // 2. Filter Auctions based on Search
-    const filteredAuctions = auctions.filter((auction) =>
-        auction.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const handleFilterChange = (key: string, value: string) => {
+        setFilters((prev) => ({ ...prev, [key]: value }));
+    };
+
+    const clearFilters = () => {
+        setFilters({ search: "", category: "all", minPrice: "", maxPrice: "", sortBy: "newest" });
+    };
 
     return (
-        <div className="space-y-8">
-            {/* Header & Search */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Live Auctions</h1>
-                    <p className="text-slate-500">Browse and bid on premium items in real-time.</p>
-                </div>
-                <div className="relative w-full sm:w-72">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                        placeholder="Search auctions..."
-                        className="pl-9"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
+        <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 space-y-10">
+            {/* Header - Clean, editorial, no fluff */}
+            <div className="animate-fade-up space-y-3">
+                <p className="text-xs uppercase tracking-[0.3em] text-gold font-medium">
+                    Live Marketplace
+                </p>
+                <h1 className="font-display text-4xl md:text-5xl font-semibold text-foreground leading-tight">
+                    Curated Auctions
+                </h1>
+                <p className="text-muted-foreground max-w-2xl text-base leading-relaxed">
+                    Discover exceptional pieces and place your bid in real-time. 
+                    Every item is verified and authenticated.
+                </p>
             </div>
 
-            {/* Grid Layout */}
-            {isLoading ? (
-                <div className="flex justify-center py-20">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
-                </div>
-            ) : filteredAuctions.length === 0 ? (
-                <div className="text-center py-20 text-slate-500">
-                    No active auctions found.
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredAuctions.map((auction) => (
-                        <AuctionCard key={auction._id} auction={auction} />
-                    ))}
-                </div>
-            )}
+            <div className="grid gap-10 lg:grid-cols-4">
+                {/* Filters Sidebar */}
+                <aside className="lg:col-span-1 animate-fade-up-delay-1">
+                    <Card className="border-border bg-card sticky top-24">
+                        <CardContent className="p-6">
+                            <AuctionFilters
+                                filters={filters}
+                                onFilterChange={handleFilterChange}
+                                onClear={clearFilters}
+                            />
+                        </CardContent>
+                    </Card>
+                </aside>
+
+                {/* Main Grid */}
+                <main className="lg:col-span-3">
+                    {isLoading ? (
+                        <div className="flex justify-center items-center h-96">
+                            <div className="flex flex-col items-center gap-4">
+                                <Loader2 className="h-10 w-10 animate-spin text-gold" />
+                                <p className="text-sm text-muted-foreground">Loading auctions...</p>
+                            </div>
+                        </div>
+                    ) : auctions.length === 0 ? (
+                        <Card className="border-border bg-card">
+                            <CardContent className="p-16 text-center space-y-3">
+                                <p className="font-display text-2xl text-foreground">No auctions found</p>
+                                <p className="text-muted-foreground text-sm">Try adjusting your filters to see more results.</p>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                            {auctions.map((auction, index) => (
+                                <AuctionCard key={auction._id} auction={auction} index={index} />
+                            ))}
+                        </div>
+                    )}
+                </main>
+            </div>
         </div>
     );
 }

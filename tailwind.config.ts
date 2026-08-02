@@ -8,55 +8,57 @@ const config: Config = {
     ],
     theme: {
         extend: {
+            fontFamily: {
+                sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+                display: ['ui-serif', 'Georgia', 'Times New Roman', 'serif'],
+            },
             colors: {
-                // Primary: Refined Royal Indigo (Trust, Action, Premium)
+                background: "hsl(var(--background))",
+                foreground: "hsl(var(--foreground))",
+                card: {
+                    DEFAULT: "hsl(var(--card))",
+                    foreground: "hsl(var(--card-foreground))",
+                },
+                popover: {
+                    DEFAULT: "hsl(var(--popover))",
+                    foreground: "hsl(var(--popover-foreground))",
+                },
                 primary: {
-                    50: "#EEF2FF",
-                    100: "#E0E7FF",
-                    500: "#6366F1", // Used for subtle accents
-                    600: "#4F46E5", // Main brand color (Buttons, Links)
-                    700: "#4338CA", // Hover states
-                    900: "#312E81", // Deep text/headers
+                    DEFAULT: "hsl(var(--primary))",
+                    foreground: "hsl(var(--primary-foreground))",
                 },
-                // Neutrals: Slate (Sophisticated, reduces eye strain compared to pure gray)
-                slate: {
-                    50: "#F8FAFC",  // App background
-                    100: "#F1F5F9", // Card backgrounds
-                    200: "#E2E8F0", // Borders
-                    400: "#94A3B8", // Disabled text/icons
-                    600: "#475569", // Secondary text
-                    800: "#1E293B", // Primary text
-                    900: "#0F172A", // Headings (Softer than pure black)
+                secondary: {
+                    DEFAULT: "hsl(var(--secondary))",
+                    foreground: "hsl(var(--secondary-foreground))",
                 },
-                // Semantic Colors (Crucial for UX feedback)
-                success: {
-                    DEFAULT: "#10B981", // Emerald (Wins, Completed, Positive balance)
-                    dark: "#059669",
+                muted: {
+                    DEFAULT: "hsl(var(--muted))",
+                    foreground: "hsl(var(--muted-foreground))",
                 },
-                warning: {
-                    DEFAULT: "#F59E0B", // Amber (Ending soon, Low balance)
-                    dark: "#D97706",
+                accent: {
+                    DEFAULT: "hsl(var(--accent))",
+                    foreground: "hsl(var(--accent-foreground))",
                 },
-                danger: {
-                    DEFAULT: "#EF4444", // Red (Outbid, Errors, Cancelled)
-                    dark: "#DC2626",
+                destructive: {
+                    DEFAULT: "hsl(var(--destructive))",
+                    foreground: "hsl(var(--destructive-foreground))",
+                },
+                border: "hsl(var(--border))",
+                input: "hsl(var(--input))",
+                ring: "hsl(var(--ring))",
+                gold: {
+                    DEFAULT: "hsl(var(--gold))",
+                    soft: "hsl(var(--gold-soft))",
                 },
             },
-            // Professional Gradients (Subtle, not overwhelming)
-            backgroundImage: {
-                'brand-gradient': 'linear-gradient(135deg, #4F46E5 0%, #312E81 100%)',
-                'brand-gradient-hover': 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
-                'surface-gradient': 'linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%)',
-            },
-            // Professional Shadows (Soft, diffused, modern)
-            boxShadow: {
-                'sm': '0 1px 2px 0 rgba(15, 23, 42, 0.05)',
-                'md': '0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -1px rgba(15, 23, 42, 0.04)',
-                'lg': '0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04)',
-                'glow': '0 0 15px rgba(79, 70, 229, 0.3)', // For primary buttons
+            borderRadius: {
+                lg: "var(--radius)",
+                md: "calc(var(--radius) - 2px)",
+                sm: "calc(var(--radius) - 4px)",
             },
         },
     },
     plugins: [],
 };
+
 export default config;

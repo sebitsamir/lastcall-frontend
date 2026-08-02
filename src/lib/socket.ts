@@ -7,7 +7,7 @@ let socket: Socket | null = null;
 
 export const getSocket = (): Socket => {
     if (!socket) {
-        socket = io(process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000", {
+        socket = io(process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001", {
             withCredentials: true, // Send cookies if needed
             transports: ["websocket", "polling"], // Fallback to polling if WS fails
         });

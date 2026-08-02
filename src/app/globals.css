@@ -1,25 +1,110 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: ui-serif, Georgia, 'Times New Roman', serif;
+  
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-gold: hsl(var(--gold));
+  --color-gold-soft: hsl(var(--gold-soft));
+  
+  --radius: 0.75rem;
+}
 
 @layer base {
   :root {
-    --background: 248 250 252; /* slate-50 */
-    --foreground: 15 23 42;    /* slate-900 */
-    --card: 255 255 255;       /* white */
-    --card-foreground: 15 23 42;
-    --primary: 79 70 229;      /* indigo-600 */
-    --primary-foreground: 255 255 255;
-    --muted: 241 245 249;      /* slate-100 */
-    --muted-foreground: 71 85 105; /* slate-600 */
-    --border: 226 232 240;     /* slate-200 */
-    --ring: 79 70 229;         /* indigo-600 */
+    /* Deep, sophisticated dark palette with warm gold accents */
+    --background: 240 10% 4%;        /* Near-black with blue undertone */
+    --foreground: 45 20% 97%;        /* Warm off-white */
+    --card: 240 8% 7%;               /* Slightly lighter */
+    --card-foreground: 45 20% 97%;
+    --popover: 240 8% 7%;
+    --popover-foreground: 45 20% 97%;
+    --primary: 217 91% 60%;          /* Refined blue */
+    --primary-foreground: 240 10% 4%;
+    --secondary: 240 6% 12%;         /* Subtle elevation */
+    --secondary-foreground: 45 20% 90%;
+    --muted: 240 6% 12%;
+    --muted-foreground: 240 5% 55%;  /* Readable but quiet */
+    --accent: 240 6% 12%;
+    --accent-foreground: 45 20% 97%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 14%;            /* Barely visible borders */
+    --input: 240 6% 14%;
+    --ring: 217 91% 60%;
+    --gold: 43 74% 52%;              /* Luxury gold */
+    --gold-soft: 43 60% 92%;         /* Soft gold for backgrounds */
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
-    background-color: rgb(var(--background));
-    color: rgb(var(--foreground));
-    font-feature-settings: "rlig" 1, "calt" 1; /* Improves font rendering */
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    /* Subtle radial glow for depth */
+    background-image: 
+      radial-gradient(ellipse 80% 50% at 50% -20%, hsla(217, 91%, 60%, 0.08), transparent);
+  }
+
+  /* Elegant serif for headings */
+  h1, h2, h3, .font-display {
+    font-family: ui-serif, Georgia, 'Times New Roman', serif;
+    font-feature-settings: "liga", "dlig";
+    letter-spacing: -0.02em;
+  }
+
+  /* Custom scrollbar - premium detail */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 10px;
+    border: 2px solid hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+
+  ::selection {
+    background: hsl(var(--gold) / 0.3);
+    color: hsl(var(--foreground));
   }
 }
 
@@ -27,4 +112,136 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Staggered reveal animation */
+  .animate-fade-up {
+    animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-fade-up-delay-1 {
+    animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+  }
+
+  .animate-fade-up-delay-2 {
+    animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+  }
+
+  .animate-fade-up-delay-3 {
+    animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+  }
+
+  /* Subtle shimmer for premium elements */
+  .animate-shimmer {
+    background: linear-gradient(
+      110deg,
+      transparent 25%,
+      hsl(var(--gold) / 0.1) 37%,
+      transparent 63%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  /* Gold gradient text */
+  .text-gradient-gold {
+    background: linear-gradient(135deg, hsl(43, 80%, 60%), hsl(43, 70%, 45%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Premium border glow on hover */
+  .hover-glow {
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .hover-glow:hover {
+    border-color: hsl(var(--gold) / 0.4);
+    box-shadow: 0 0 40px -10px hsl(var(--gold) / 0.15);
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-up-delay-1,
+  .animate-fade-up-delay-2,
+  .animate-fade-up-delay-3,
+  .animate-shimmer {
+    animation: none;
+  }
+}
+
+select option {
+  background-color: hsl(var(--card)); /* Dark background */
+  color: hsl(var(--card-foreground)); /* Light text */
+  padding: 8px;
+}
+
+/* Ensure the select box itself looks premium */
+select {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+}
+
+/* Force dark mode colors on browser autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px hsl(var(--background)) inset !important;
+  -webkit-text-fill-color: hsl(var(--foreground)) !important;
+  caret-color: hsl(var(--foreground));
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Ensure standard inputs have correct text color */
+input {
+  color: hsl(var(--foreground));
+}
+
+input::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  50% { transform: translateY(-20px) translateX(10px); }
+}
+
+@keyframes float-slower {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  50% { transform: translateY(20px) translateX(-10px); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.animate-float-slow {
+  animation: float-slow 20s ease-in-out infinite;
+}
+
+.animate-float-slower {
+  animation: float-slower 25s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s ease-in-out infinite;
 }
