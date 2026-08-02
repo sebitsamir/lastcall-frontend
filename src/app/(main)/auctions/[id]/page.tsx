@@ -1,4 +1,3 @@
-// src/app/(main)/auctions/[id]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,19 +7,18 @@ import { auctionService } from "@/services/auctionService";
 import { getSocket } from "@/lib/socket";
 import { BidForm } from "@/components/auction/BidForm";
 import { CountdownTimer } from "@/components/auction/CountdownTimer";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { Loader2, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, User, Clock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export default function AuctionDetailPage() {
     const params = useParams();
     const auctionId = params.id as string;
-
     const [auction, setAuction] = useState<IAuction | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // 1. Fetch Initial Data
     useEffect(() => {
         const fetchAuction = async () => {
             try {
@@ -35,104 +33,125 @@ export default function AuctionDetailPage() {
         fetchAuction();
     }, [auctionId]);
 
-    // 2. Setup Real-Time Socket Listeners
     useEffect(() => {
         if (!auction) return;
-
         const socket = getSocket();
-
-        // Join the specific room for this auction
         socket.emit("joinAuction", auctionId);
-
-        // Listen for new bids from OTHER users
         const handleNewBid = (data: { currentBid: number; bidderName: string }) => {
             setAuction((prev) => prev ? { ...prev, currentBid: data.currentBid } : null);
-            toast.info(`New bid placed by ${data.bidderName}!`);
+            toast.info(`New bid by ${data.bidderName}`);
         };
-
-        // Listen for auction ending
-        const handleAuctionEnded = (data: { status: string }) => {
-            setAuction((prev) => prev ? { ...prev, status: data.status as any } : null);
-            toast.warning("This auction has ended!");
-        };
-
         socket.on("newBid", handleNewBid);
-        socket.on("auctionEnded", handleAuctionEnded);
-
-        // CRITICAL: Cleanup listeners when leaving the page
-        return () => {
-            socket.off("newBid", handleNewBid);
-            socket.off("auctionEnded", handleAuctionEnded);
-        };
+        return () => { socket.off("newBid", handleNewBid); };
     }, [auction, auctionId]);
 
     if (isLoading) {
         return (
-            <div className="flex justify-center py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+            <div className="flex justify-center items-center min-h-[60vh]">
+                <Loader2 className="h-10 w-10 animate-spin text-gold" />
             </div>
         );
     }
 
-    if (!auction) {
-        return <div className="text-center py-20 text-slate-500">Auction not found.</div>;
-    }
+    if (!auction) return <div className="text-center py-20 text-muted-foreground">Auction not found.</div>;
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 py-8">
-            {/* Header */}
-            <div className="flex justify-between items-start">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900">{auction.title}</h1>
-                    <p className="text-slate-500 mt-1">Category: {auction.category}</p>
-                </div>
-                <Badge variant={auction.status === "active" ? "success" : "default"} className="text-sm px-3 py-1">
-                    {auction.status.toUpperCase()}
+        <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 animate-fade-up">
+            {/* Breadcrumb / Status - Crisp, solid */}
+            <div className="flex items-center gap-3 mb-8">
+                <Badge variant="outline" className="border-gold/40 text-gold bg-gold/5 px-3 py-1 font-medium">
+                    {(auction.status || "pending").toUpperCase()}
                 </Badge>
+                <span className="text-sm text-muted-foreground uppercase tracking-[0.2em]">
+                    {auction.category}
+                </span>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Image & Description */}
-                <div className="lg:col-span-2 space-y-6">
-                    <Card>
-                        <div className="aspect-video w-full bg-slate-200 rounded-t-xl overflow-hidden">
-                            {auction.images?.[0] ? (
-                                <img src={auction.images[0]} alt={auction.title} className="w-full h-full object-cover" />
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-slate-400">No Image</div>
-                            )}
-                        </div>
-                        <CardContent className="p-6">
-                            <h2 className="text-xl font-semibold mb-2">Description</h2>
-                            <p className="text-slate-600 whitespace-pre-wrap">{auction.description}</p>
-                        </CardContent>
-                    </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                {/* Left: Image & Description */}
+                <div className="lg:col-span-2 space-y-8">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-card"
+                    >
+                        {auction.images?.[0] ? (
+                            <img src={auction.images[0]} alt={auction.title} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-secondary">
+                                No Image Available
+                            </div>
+                        )}
+                    </motion.div>
+
+                    <div className="space-y-4">
+                        <h1 className="font-display text-4xl md:text-5xl font-semibold text-foreground leading-tight">
+                            {auction.title}
+                        </h1>
+                        <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
+                            {auction.description}
+                        </p>
+                    </div>
                 </div>
 
-                {/* Right Column: Bidding Engine */}
-                <div className="space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-slate-500 text-sm font-normal uppercase tracking-wider">Current Bid</CardTitle>
-                            <div className="text-4xl font-bold text-primary-600">${auction.currentBid.toFixed(2)}</div>
-                            <CardDescription className="flex items-center gap-2 mt-2">
-                                <User className="h-4 w-4" />
-                                {auction.currentHighestBidder ? "Bidder active" : "No bids yet"}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                                <span className="text-sm text-slate-600">Time Remaining</span>
-                                <CountdownTimer endTime={auction.endTime} />
-                            </div>
+                {/* Right: Bidding Engine (Sticky) */}
+                <div className="lg:col-span-1">
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="sticky top-24"
+                    >
+                        <Card className="border-border bg-card overflow-hidden">
+                            {/* Solid, crisp top accent line (NO gradient) */}
+                            <div className="h-px w-full bg-gold/50" />
 
-                            {/* The Bidding Form */}
-                            <BidForm
-                                auction={auction}
-                                onBidPlaced={(newBid) => setAuction({ ...auction, currentBid: newBid })}
-                            />
-                        </CardContent>
-                    </Card>
+                            <CardContent className="p-8 space-y-8">
+                                {/* Current Bid Display - Solid gold, authoritative */}
+                                <div className="space-y-2">
+                                    <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
+                                        Current Highest Bid
+                                    </p>
+                                    <p className="font-display text-5xl font-semibold text-gold">
+                                        ${(auction.currentBid || 0).toLocaleString()}
+                                    </p>
+                                </div>
+
+                                {/* Timer - Clean, structured */}
+                                <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/30 border border-border">
+                                    <Clock className="h-5 w-5 text-gold" />
+                                    <div className="flex-1">
+                                        <p className="text-xs text-muted-foreground mb-0.5 uppercase tracking-wider">
+                                            Auction Ends In
+                                        </p>
+                                        <CountdownTimer endTime={auction.endTime} className="text-lg font-semibold text-foreground" />
+                                    </div>
+                                </div>
+
+                                {/* Bid Form */}
+                                <BidForm
+                                    auction={auction}
+                                    onBidPlaced={(newBid) => setAuction({ ...auction, currentBid: newBid })}
+                                />
+
+                                {/* Seller Info - Solid background, crisp border */}
+                                <div className="pt-6 border-t border-border flex items-center gap-4">
+                                    <div className="h-12 w-12 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center">
+                                        <User className="h-5 w-5 text-gold" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-foreground">
+                                            {auction.seller?.name || "Verified Seller"}
+                                        </p>
+                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                            <ShieldCheck className="h-3.5 w-3.5 text-gold" />
+                                            <p className="text-xs text-muted-foreground">Authenticated & Verified</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
                 </div>
             </div>
         </div>

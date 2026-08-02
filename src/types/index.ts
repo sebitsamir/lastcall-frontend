@@ -9,6 +9,7 @@ export interface IUser {
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
+    watchlist: string[]; 
 }
 
 // 2. Auction Type (matches backend Auction.js)

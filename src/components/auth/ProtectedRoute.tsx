@@ -1,35 +1,35 @@
-// src/components/auth/ProtectedRoute.tsx
 "use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
-import { Loader2 } from "lucide-react"; // We'll install this for a nice loading spinner
+import { Loader2 } from "lucide-react";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const { isAuthenticated, isLoading } = useAuthStore();
     const router = useRouter();
 
     useEffect(() => {
-        // If we finished checking auth and the user is NOT logged in, redirect them.
+        // ONLY redirect if we are DONE loading AND the user is NOT authenticated
         if (!isLoading && !isAuthenticated) {
             router.push("/login");
         }
     }, [isAuthenticated, isLoading, router]);
 
-    // Show a loading spinner while Zustand is checking the cookie/token
+    // 1. Show a loading spinner while checking auth status
     if (isLoading) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-slate-50">
-                <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+            <div className="flex min-h-screen items-center justify-center bg-background">
+                <Loader2 className="h-10 w-10 animate-spin text-gold" />
             </div>
         );
     }
 
-    // If they are authenticated, render the page
-    if (isAuthenticated) {
-        return <>{children}</>;
+    // 2. If done loading and still not authenticated, render nothing (redirect is happening)
+    if (!isAuthenticated) {
+        return null;
     }
 
-    return null;
+    // 3. Otherwise, render the protected page
+    return <>{children}</>;
 }

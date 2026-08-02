@@ -4,15 +4,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { registerSchema, RegisterValues } from "@/lib/validators";
 import { authService } from "@/services/authService";
 import { useAuthStore } from "@/store/authStore";
 
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
+import { Button } from "@/components/ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 
 export function RegisterForm() {
     const router = useRouter();
@@ -33,57 +33,77 @@ export function RegisterForm() {
         try {
             const { user } = await authService.register(data);
             setAuth(user);
-            router.push("/");
-        }
-        catch (err: any) {
-            setError(err.response?.data?.message || "Registration failed.");
+            toast.success("Account created successfully!");
+            router.push("/auctions");
+        } catch (err: any) {
+            const errorMessage = err.response?.data?.message || "Registration failed.";
+            setError(errorMessage);
+            toast.error(errorMessage);
         }
     };
 
     return (
-        <Card>
-            <CardHeader className="space-y-1 text-center">
-                <CardTitle className="text-2xl font-bold text-transparent bg-clip-text bg-brand-gradient">
-                    Create an Account
-                </CardTitle>
-                <CardDescription>
-                    Enter your details to get started with LastCall
-                </CardDescription>
-            </CardHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div className="space-y-2">
+                <Label htmlFor="name" className="text-xs uppercase tracking-widest text-muted-foreground">
+                    Full Name
+                </Label>
+                <Input
+                    id="name"
+                    placeholder="John Doe"
+                    {...register("name")}
+                    className="bg-background border-border focus:border-gold/50 focus:ring-gold/20"
+                />
+                {errors.name && (
+                    <p className="text-sm text-destructive">{errors.name.message}</p>
+                )}
+            </div>
 
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input id="name" placeholder="John Doe" {...register("name")} />
-                        {errors.name && <p className="text-xs text-danger">{errors.name.message}</p>}
-                    </div>
+            <div className="space-y-2">
+                <Label htmlFor="email" className="text-xs uppercase tracking-widest text-muted-foreground">
+                    Email Address
+                </Label>
+                <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    {...register("email")}
+                    className="bg-background border-border focus:border-gold/50 focus:ring-gold/20"
+                />
+                {errors.email && (
+                    <p className="text-sm text-destructive">{errors.email.message}</p>
+                )}
+            </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="reg-email">Email</Label>
-                        <Input id="reg-email" type="email" placeholder="you@example.com" {...register("email")} />
-                        {errors.email && <p className="text-xs text-danger">{errors.email.message}</p>}
-                    </div>
+            <div className="space-y-2">
+                <Label htmlFor="password" className="text-xs uppercase tracking-widest text-muted-foreground">
+                    Password
+                </Label>
+                <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    {...register("password")}
+                    className="bg-background border-border focus:border-gold/50 focus:ring-gold/20"
+                />
+                {errors.password && (
+                    <p className="text-sm text-destructive">{errors.password.message}</p>
+                )}
+            </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="reg-password">Password</Label>
-                        <Input id="reg-password" type="password" placeholder="••••••••" {...register("password")} />
-                        {errors.password && <p className="text-xs text-danger">{errors.password.message}</p>}
-                    </div>
+            {error && (
+                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center">
+                    {error}
+                </div>
+            )}
 
-                    {error && (
-                        <div className="p-3 rounded-md bg-danger/10 text-danger text-sm text-center">
-                            {error}
-                        </div>
-                    )}
-                </CardContent>
-
-                <CardFooter>
-                    <Button type="submit" className="w-full" disabled={isSubmitting}>
-                        {isSubmitting ? "Creating account..." : "Create Account"}
-                    </Button>
-                </CardFooter>
-            </form>
-        </Card>
+            <Button
+                type="submit"
+                className="w-full h-12 bg-gold text-background font-semibold hover:bg-amber-400 transition-colors"
+                disabled={isSubmitting}
+            >
+                {isSubmitting ? "Creating account..." : "Create Account"}
+            </Button>
+        </form>
     );
 }
