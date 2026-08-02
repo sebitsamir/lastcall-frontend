@@ -1,4 +1,3 @@
-// src/services/auctionService.ts
 import api from "@/lib/api";
 import { IApiResponse, IAuction } from "@/types";
 
