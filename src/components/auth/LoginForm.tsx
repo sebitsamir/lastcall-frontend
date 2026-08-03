@@ -32,13 +32,13 @@ export function LoginForm() {
         setError(null);
         try {
             // Login and get user data
-            const { user } = await authService.login(data);
+            const { User } = await authService.login(data);
 
             // CRITICAL: Set the auth state in Zustand store
-            setAuth(user);
+            setAuth(User);
 
             // Show success message
-            toast.success(`Welcome back, ${user.name}!`);
+            toast.success(`Welcome back, ${User.name}!`);
 
             // Redirect to auctions
             router.push("/auctions");

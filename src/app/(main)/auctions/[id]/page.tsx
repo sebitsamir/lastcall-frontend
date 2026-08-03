@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { IAuction } from "@/types";
+import { IAuction, IUser } from "@/types";
 import { auctionService } from "@/services/auctionService";
 import { getSocket } from "@/lib/socket";
 import { BidForm } from "@/components/auction/BidForm";
@@ -141,7 +141,7 @@ export default function AuctionDetailPage() {
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-foreground">
-                                            {auction.seller?.name || "Verified Seller"}
+                                            {typeof auction.seller === 'object' && auction.seller !== null ? (auction.seller as IUser).name : "Verified Seller"}
                                         </p>
                                         <div className="flex items-center gap-1.5 mt-0.5">
                                             <ShieldCheck className="h-3.5 w-3.5 text-gold" />

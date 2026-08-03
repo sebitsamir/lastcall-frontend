@@ -1,10 +1,9 @@
 import api from "@/lib/api";
-import { IApiResponse, IUser, LoginValues, RegisterValues } from "@/types";
-import { register } from "module";
+import { IApiResponse, IUser, ILoginPayload, IRegisterPayload } from "@/types";
 
 export const authService = {
     // Login
-    login: async (data: LoginValues) => {
+    login: async (data: ILoginPayload) => {
         const response = await api.post<IApiResponse<{ accessToken: string, User: IUser }>>(
             "/auth/login",
             data
@@ -13,7 +12,7 @@ export const authService = {
     },
 
     // Register
-    register: async (data: RegisterValues) => {
+    register: async (data: IRegisterPayload) => {
         const response = await api.post<IApiResponse<{ accessToken: string, user: IUser }>>(
             "/auth/register",
             data
