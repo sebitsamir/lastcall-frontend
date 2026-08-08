@@ -1,15 +1,16 @@
 // 1. User Types (matches backend User.js)
 export interface IUser {
     _id: string;
+    id?: string;
     name: string;
     email: string;
     role: "user" | "admin";
     availableBalance: number;
-    frozenBalance: number;
-    isActive: boolean;
-    createdAt: string;
-    updatedAt: string;
-    watchlist: string[]; 
+    frozenBalance?: number;
+    isActive?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+    watchlist?: string[];
 }
 
 // 2. Auction Type (matches backend Auction.js)

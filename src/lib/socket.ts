@@ -1,18 +1,21 @@
 // src/lib/socket.ts
 import { io, Socket } from "socket.io-client";
 
-// We only want ONE socket instance for the entire application.
-// This is the Singleton pattern.
+// Socket.io connects to the server origin, not the /api/v1 REST base path
+const getSocketUrl = () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
+    return apiUrl.replace(/\/api\/v1\/?$/, "");
+};
+
 let socket: Socket | null = null;
 
 export const getSocket = (): Socket => {
     if (!socket) {
-        socket = io(process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001", {
-            withCredentials: true, // Send cookies if needed
-            transports: ["websocket", "polling"], // Fallback to polling if WS fails
+        socket = io(getSocketUrl(), {
+            withCredentials: true,
+            transports: ["websocket", "polling"],
         });
 
-        // Optional: Log connection for debugging
         socket.on("connect", () => {
             console.log("Socket connected:", socket?.id);
         });

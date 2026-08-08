@@ -52,12 +52,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         try {
             // If a token exists, ask the backend who this user is
-            const response = await api.get("/users/me");
+            const response = await api.get("/auth/me");
 
             set({
-            user: response.data.data,
-            isAuthenticated: true,
-            isLoading: false
+                user: response.data.data,
+                isAuthenticated: true,
+                isLoading: false,
             });
         }
         catch (error) {

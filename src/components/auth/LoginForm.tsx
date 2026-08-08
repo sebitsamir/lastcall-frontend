@@ -31,16 +31,10 @@ export function LoginForm() {
     const onSubmit = async (data: LoginValues) => {
         setError(null);
         try {
-            // Login and get user data
-            const { User } = await authService.login(data);
+            const { user } = await authService.login(data);
 
-            // CRITICAL: Set the auth state in Zustand store
-            setAuth(User);
-
-            // Show success message
-            toast.success(`Welcome back, ${User.name}!`);
-
-            // Redirect to auctions
+            setAuth(user);
+            toast.success(`Welcome back, ${user.name}!`);
             router.push("/auctions");
 
         } catch (err: any) {
