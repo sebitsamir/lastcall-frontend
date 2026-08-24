@@ -3,7 +3,7 @@
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-display: ui-serif, Georgia, 'Times New Roman', serif;
-  
+
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
@@ -25,86 +25,101 @@
   --color-ring: hsl(var(--ring));
   --color-gold: hsl(var(--gold));
   --color-gold-soft: hsl(var(--gold-soft));
-  
+
   --radius: 0.75rem;
 }
 
 @layer base {
   :root {
     /* Deep, sophisticated dark palette with warm gold accents */
-    --background: 240 10% 4%;        /* Near-black with blue undertone */
-    --foreground: 45 20% 97%;        /* Warm off-white */
-    --card: 240 8% 7%;               /* Slightly lighter */
+    --background: 240 10% 4%;
+    /* Near-black with blue undertone */
+    --foreground: 45 20% 97%;
+    /* Warm off-white */
+    --card: 240 8% 7%;
+    /* Slightly lighter */
     --card-foreground: 45 20% 97%;
     --popover: 240 8% 7%;
     --popover-foreground: 45 20% 97%;
-    --primary: 217 91% 60%;          /* Refined blue */
+    --primary: 217 91% 60%;
+    /* Refined blue */
     --primary-foreground: 240 10% 4%;
-    --secondary: 240 6% 12%;         /* Subtle elevation */
+    --secondary: 240 6% 12%;
+    /* Subtle elevation */
     --secondary-foreground: 45 20% 90%;
     --muted: 240 6% 12%;
-    --muted-foreground: 240 5% 55%;  /* Readable but quiet */
+    --muted-foreground: 240 5% 55%;
+    /* Readable but quiet */
     --accent: 240 6% 12%;
     --accent-foreground: 45 20% 97%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 6% 14%;            /* Barely visible borders */
+    --border: 240 6% 14%;
+    /* Barely visible borders */
     --input: 240 6% 14%;
     --ring: 217 91% 60%;
-    --gold: 43 74% 52%;              /* Luxury gold */
-    --gold-soft: 43 60% 92%;         /* Soft gold for backgrounds */
+    --gold: 43 74% 52%;
+    /* Luxury gold */
+    --gold-soft: 43 60% 92%;
+    /* Soft gold for backgrounds */
   }
 }
 
 @layer base {
-  * {
-    border-color: hsl(var(--border));
-  }
+  :root {
+    /* Dark Editorial Luxury Palette */
+    --background: 0 0% 4%;
+    /* #090909 - Deep, rich black */
+    --foreground: 60 15% 95%;
+    /* #F5F5F0 - Warm off-white */
 
-  html {
-    scroll-behavior: smooth;
-  }
+    --card: 0 0% 7%;
+    /* #111111 - Surface */
+    --card-foreground: 60 15% 95%;
 
-  body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-    font-feature-settings: "cv11", "ss01";
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    min-height: 100vh;
-    /* Subtle radial glow for depth */
-    background-image: 
-      radial-gradient(ellipse 80% 50% at 50% -20%, hsla(217, 91%, 60%, 0.08), transparent);
-  }
+    --popover: 0 0% 9%;
+    /* #171717 - Elevated Surface (Modals/Dropdowns) */
+    --popover-foreground: 60 15% 95%;
 
-  /* Elegant serif for headings */
-  h1, h2, h3, .font-display {
-    font-family: ui-serif, Georgia, 'Times New Roman', serif;
-    font-feature-settings: "liga", "dlig";
-    letter-spacing: -0.02em;
-  }
+    --primary: 39 53% 61%;
+    /* #D4AF63 - Muted Gold (Accents, Current Bid) */
+    --primary-foreground: 0 0% 4%;
+    /* Dark text on gold buttons */
 
-  /* Custom scrollbar - premium detail */
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-  ::-webkit-scrollbar-track {
-    background: hsl(var(--background));
-  }
-  ::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
-    border-radius: 10px;
-    border: 2px solid hsl(var(--background));
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground));
-  }
+    --secondary: 0 0% 9%;
+    /* #171717 */
+    --secondary-foreground: 60 15% 95%;
 
-  ::selection {
-    background: hsl(var(--gold) / 0.3);
-    color: hsl(var(--foreground));
+    --muted: 0 0% 9%;
+    /* #171717 */
+    --muted-foreground: 0 0% 57%;
+    /* #929292 - Secondary Text */
+
+    --accent: 42 72% 69%;
+    /* #E8C878 - Bright Gold (Hover states, Urgent) */
+    --accent-foreground: 0 0% 4%;
+
+    --destructive: 0 60% 63%;
+    /* #D96868 - Danger/Outbid */
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 140 30% 59%;
+    /* #76B68A - Winning/Deposits */
+
+    --border: 0 0% 15%;
+    /* #252525 - Thin, elegant borders */
+    --input: 0 0% 15%;
+    --ring: 39 53% 61%;
+
+    /* Sharp corners for an editorial, precision feel */
+    --radius: 0.25rem;
+  }
+}
+
+/* Add the serif utility class */
+@layer utilities {
+  .font-serif {
+    font-family: var(--font-serif);
   }
 }
 
@@ -132,12 +147,10 @@
 
   /* Subtle shimmer for premium elements */
   .animate-shimmer {
-    background: linear-gradient(
-      110deg,
-      transparent 25%,
-      hsl(var(--gold) / 0.1) 37%,
-      transparent 63%
-    );
+    background: linear-gradient(110deg,
+        transparent 25%,
+        hsl(var(--gold) / 0.1) 37%,
+        transparent 63%);
     background-size: 200% 100%;
     animation: shimmer 3s ease-in-out infinite;
   }
@@ -154,6 +167,7 @@
   .hover-glow {
     transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   }
+
   .hover-glow:hover {
     border-color: hsl(var(--gold) / 0.4);
     box-shadow: 0 0 40px -10px hsl(var(--gold) / 0.15);
@@ -164,6 +178,7 @@
       opacity: 0;
       transform: translateY(20px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -171,12 +186,18 @@
   }
 
   @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+      background-position: 200% 0;
+    }
+
+    100% {
+      background-position: -200% 0;
+    }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .animate-fade-up,
   .animate-fade-up-delay-1,
   .animate-fade-up-delay-2,
@@ -187,8 +208,10 @@
 }
 
 select option {
-  background-color: hsl(var(--card)); /* Dark background */
-  color: hsl(var(--card-foreground)); /* Light text */
+  background-color: hsl(var(--card));
+  /* Dark background */
+  color: hsl(var(--card-foreground));
+  /* Light text */
   padding: 8px;
 }
 
@@ -220,18 +243,39 @@ input::placeholder {
 }
 
 @keyframes float-slow {
-  0%, 100% { transform: translateY(0px) translateX(0px); }
-  50% { transform: translateY(-20px) translateX(10px); }
+
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+
+  50% {
+    transform: translateY(-20px) translateX(10px);
+  }
 }
 
 @keyframes float-slower {
-  0%, 100% { transform: translateY(0px) translateX(0px); }
-  50% { transform: translateY(20px) translateX(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+
+  50% {
+    transform: translateY(20px) translateX(-10px);
+  }
 }
 
 @keyframes pulse-slow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
 }
 
 .animate-float-slow {
