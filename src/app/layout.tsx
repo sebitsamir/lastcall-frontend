@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
-import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner"
-
+import { AppShell } from "@/components/layout/AppShell";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -32,6 +31,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${instrument.variable} font-sans antialiased bg-background text-foreground`}>
         <AuthProvider>
           {children}
+          <AppShell>{children}</AppShell>
           <Toaster position="top-right" richColors />
         </AuthProvider>
       </body>
