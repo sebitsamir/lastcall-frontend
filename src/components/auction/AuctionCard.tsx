@@ -1,92 +1,107 @@
-"use client";
-
+/**
+ * Purely presentational (no hooks, no state) → safe as a server component.
+ * The card is an "auction lot", not a product card: lot number, current bid
+ * and time remaining are the hierarchy. Gold is reserved for the bid figure.
+ */
 import Link from "next/link";
-import { IAuction } from "@/types";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { CountdownTimer } from "./CountdownTimer";
-import { WatchlistButton } from "./WatchlistButton";
 import { ArrowUpRight } from "lucide-react";
-
+import type { IAuction } from "@/types";
+import { cn } from "@/lib/utils";
+import { formatMoney, lotNumber } from "@/lib/formatting/format";
+import { StatusBadge } from "@/components/auction/StatusBadge";
+import { CountdownTimer } from "@/components/auction/CountdownTimer";
+import { WatchlistButton } from "@/components/auction/WatchlistButton";
 interface AuctionCardProps {
     auction: IAuction;
-    index?: number;
+    className?: string;
 }
 
-export function AuctionCard({ auction, index = 0 }: AuctionCardProps) {
+export function AuctionCard({ auction, className }: AuctionCardProps) {
+    /**
+     * Defensive bid count: the backend may expose `bids` as an array, a number,
+     * or omit it entirely depending on the endpoint. Never crash the card.
+     */
+    const raw = (auction as Record<string, unknown>).bids;
+    const bidCount = Array.isArray(raw) ? raw.length : typeof raw === "number" ? raw : 0;
+
+    // Current bid falls back to starting price before any bids exist.
+    const displayBid = auction.currentBid ?? auction.startingPrice ?? 0;
+
     return (
-        <Link href={`/auctions/${auction._id}`}>
-            <Card
-                className={`group relative overflow-hidden border border-border bg-card hover:border-gold/40 transition-all duration-300 animate-fade-up`}
-                style={{ animationDelay: `${index * 0.08}s` }}
+        <Link
+            href={`/auctions/${auction._id}`}
+            className={cn("group block h-full", className)}
+            aria-label={`View lot: ${auction.title}`}
+        >
+            <article
+                className={cn(
+                    "flex h-full flex-col overflow-hidden rounded-sm border border-border bg-card",
+                    // Thin border shift on hover — no shadows, no glow. Precision over noise.
+                    "transition-colors duration-300 group-hover:border-primary/40"
+                )}
             >
-                {/* Image Section */}
+                {/* ── Visual ─ editorial photography with restrained motion (1.00→1.03) */}
                 <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
-                    {auction.images && auction.images.length > 0 ? (
+                    {auction.images?.[0] ? (
                         <img
                             src={auction.images[0]}
                             alt={auction.title}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            loading="lazy" // Defer offscreen images → faster LCP for the grid.
+                            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                         />
                     ) : (
-                        <div className="flex h-full items-center justify-center text-muted-foreground">
-                            No Image
+                        // Graceful placeholder keeps the grid rhythm when imagery is missing.
+                        <div className="flex h-full items-center justify-center font-serif text-lg text-muted-foreground/40">
+                            No image
                         </div>
                     )}
 
-                    {/* SOLID dark overlay for text readability (NO gradients) */}
-                    <div className="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                    {/* Status Badge - Solid, crisp */}
+                    {/* Status pinned top-left (LIVE / UPCOMING / ENDED / CANCELLED). */}
                     <div className="absolute left-3 top-3">
-                        <Badge
-                            variant={auction.status === "active" ? "default" : "secondary"}
-                            className="bg-background/80 text-foreground border border-border backdrop-blur-sm"
-                        >
-                            {(auction.status || "pending").toUpperCase()}
-                        </Badge>
+                        <StatusBadge status={auction.status} />
                     </div>
 
-                    {/* Watchlist */}
+                    {/* Watchlist pinned top-right; client island inside a static card. */}
                     <div className="absolute right-3 top-3">
                         <WatchlistButton auctionId={auction._id} initialIsWatching={false} />
                     </div>
+                </div>
 
-                    {/* Arrow indicator - Solid border, no glow */}
-                    <div className="absolute right-3 bottom-3 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-gold/50 bg-background/80 backdrop-blur-sm">
-                            <ArrowUpRight className="h-4 w-4 text-gold" />
+                {/* ── Metadata  lot identity first, money second, time third. */}
+                <div className="flex flex-1 flex-col gap-3 p-4">
+                    <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+                        <span>Lot {lotNumber(auction._id)}</span>
+                        <span>{auction.category}</span>
+                    </div>
+
+                    <h3 className="line-clamp-1 font-serif text-lg leading-snug text-foreground transition-colors group-hover:text-primary">
+                        {auction.title}
+                    </h3>
+
+                    {/* Footer: the two numbers that matter — money and time. */}
+                    <div className="mt-auto flex items-end justify-between border-t border-border pt-3">
+                        <div>
+                            <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+                                Current bid
+                            </p>
+                            {/* Gold reserved for value. tabular-nums keeps widths stable. */}
+                            <p className="text-xl font-medium tabular-nums text-primary">
+                                {formatMoney(displayBid)}
+                            </p>
+                        </div>
+
+                        <div className="text-right text-xs text-muted-foreground">
+                            <CountdownTimer endTime={auction.endTime} />
+                            <p className="mt-1 tabular-nums">{bidCount} bids</p>
                         </div>
                     </div>
                 </div>
+            </article>
 
-                {/* Content */}
-                <CardContent className="p-5 space-y-3">
-                    <div className="space-y-1.5">
-                        <h3 className="font-display text-lg font-semibold text-foreground line-clamp-1 group-hover:text-gold transition-colors duration-300">
-                            {auction.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                            {auction.description}
-                        </p>
-                    </div>
-                </CardContent>
-
-                {/* Footer */}
-                <CardFooter className="px-5 pb-5 pt-0 border-t border-border flex items-center justify-between">
-                    <div>
-                        <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1">
-                            Current Bid
-                        </p>
-                        <p className="font-display text-2xl font-semibold text-gold">
-                            ${(auction.currentBid || 0).toLocaleString()}
-                        </p>
-                    </div>
-                    <div className="text-right">
-                        <CountdownTimer endTime={auction.endTime} />
-                    </div>
-                </CardFooter>
-            </Card>
+            {/* Hover affordance: quiet arrow, appears only on intent. */}
+            <div className="pointer-events-none mt-2 flex justify-end opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                <ArrowUpRight className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+            </div>
         </Link>
     );
 }
