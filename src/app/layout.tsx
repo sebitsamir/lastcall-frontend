@@ -32,7 +32,19 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <AppShell>{children}</AppShell>
-          <Toaster position="top-right" richColors />
+          <Toaster
+            theme="dark"
+            position="bottom-right"
+            toastOptions={{
+              style: {
+                background: "hsl(0 0% 7%)",
+                border: "1px solid hsl(0 0% 15%)",
+                borderRadius: "2px",
+                color: "hsl(60 15% 95%)",
+                fontSize: "13px",
+              },
+            }}
+          />
         </AuthProvider>
       </body>
     </html>
