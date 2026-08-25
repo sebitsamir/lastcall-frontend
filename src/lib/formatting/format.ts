@@ -21,3 +21,22 @@ export function lotNumber(id: string): string {
     const seed = parseInt(id.slice(-3), 16) % 999; // hex → bounded int
     return String(seed + 1).padStart(3, "0");
 }
+
+/**
+ * Relative time for the bid history ("Just now", "42 sec ago", "2 min ago").
+ * Floors at days — beyond that, absolute dates read more trustworthy.
+ */
+export function timeAgo(iso: string): string {
+    const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+
+    if (seconds < 5) return "Just now";
+    if (seconds < 60) return `${seconds} sec ago`;
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} min ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+
+    return `${Math.floor(hours / 24)}d ago`;
+}
