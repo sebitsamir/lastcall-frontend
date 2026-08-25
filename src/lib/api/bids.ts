@@ -1,7 +1,11 @@
+// src/lib/api/bids.ts
 /**
+ * ────────────────────────────────────────────────────────────────────────────
  * BIDS API MODULE
+ *
  * Thin, typed boundary over the bid endpoint. The Bid Panel never touches
  * Axios; it awaits `bidsApi.place` and maps failures to designed UX states.
+ * ────────────────────────────────────────────────────────────────────────────
  */
 import api from "@/lib/api";
 import type { IApiResponse } from "@/types";
@@ -15,6 +19,14 @@ export interface BidRecord {
     createdAt: string;
 }
 
+/**
+ * Endpoint map. If the backend mounts the bid endpoint differently
+ * (e.g. `/bids` instead of `/auctions/:id/bid`), fix it here.
+ */
+const ENDPOINTS = {
+    place: (auctionId: string) => `/auctions/${auctionId}/bid`,
+} as const;
+
 export const bidsApi = {
     /**
      * Place a bid on an auction.
@@ -23,7 +35,7 @@ export const bidsApi = {
      */
     async place(auctionId: string, amount: number): Promise<IApiResponse<unknown>> {
         const { data } = await api.post<IApiResponse<unknown>>(
-            `/auctions/${auctionId}/bid`,
+            ENDPOINTS.place(auctionId),
             { amount }
         );
         return data;
