@@ -40,3 +40,13 @@ export function timeAgo(iso: string): string {
 
     return `${Math.floor(hours / 24)}d ago`;
 }
+
+/**
+ * Time-aware greeting. Small humanity, big "inhabited product" feel.
+ */
+export function greeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+}
