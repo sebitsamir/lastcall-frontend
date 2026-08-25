@@ -125,6 +125,29 @@
 }
 
 @layer utilities {
+  /**
+   * Seamless marquee for the live ticker.
+   * The track renders the list TWICE; translating -50% loops it perfectly.
+   * Linear + infinite = the market never visually "stops".
+   */
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .animate-marquee {
+    animation: marquee 45s linear infinite;
+  }
+}
+
+/* Accessibility: motion communicates state, it never imposes on preference. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}
+
+@layer utilities {
   .text-balance {
     text-wrap: balance;
   }

@@ -1,164 +1,223 @@
-import Link from "next/link";
+/**
+ * HOMEPAGE  (Phase 2, Chunk 4)
+ * The homepage is the market, not a brochure.
+ *
+ * Data strategy: ONE request (active auctions, sorted by urgency) drives the
+ * hero lot, the ticker, and the live grid. Derived slices are computed with
+ * useMemo — no redundant network calls, no fake placeholder inventory.
+ */
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Gavel } from "lucide-react";
+
+import type { IAuction } from "@/types";
+import { auctionsApi } from "@/lib/api/auctions";
+import { useAuthStore } from "@/store/authStore";
+
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Clock, Shield, TrendingUp } from "lucide-react";
-import { Logo } from "@/components/layout/Logo";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { EmptyState } from "@/components/feedback/EmptyState";
+import { ErrorState } from "@/components/feedback/ErrorState";
+import { AuctionGrid } from "@/components/auction/AuctionGrid";
+import { HeroLot } from "@/components/marketing/HeroLot";
+import { LiveTicker } from "@/components/marketing/LiveTicker";
+import { CategoryIndex } from "@/components/marketing/CategoryIndex";
 
-export default function LandingPage() {
+/** One request feeds the whole page; 12 keeps the grid balanced. */
+const HOME_LIMIT = 12;
+
+export default function HomePage() {
+  const { isAuthenticated } = useAuthStore();
+
+  /* ── Server state ─────────────────────────────────────────────────────── */
+  const [auctions, setAuctions] = useState<IAuction[]>([]);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+
+  /** Stale-response guard (same discipline as the Auctions page). */
+  const requestId = useRef(0);
+
+  const load = useCallback(() => {
+    const id = ++requestId.current;
+    setStatus("loading");
+
+    // Urgency-first: the most "alive" lots lead the hero and ticker.
+    auctionsApi
+      .list({ sortBy: "endingSoon", limit: HOME_LIMIT })
+      .then((result) => {
+        if (id !== requestId.current) return; // superseded — drop silently
+        setAuctions(result.auctions);
+        setStatus("ready");
+      })
+      .catch(() => {
+        if (id !== requestId.current) return;
+        setStatus("error");
+      });
+  }, []);
+
+  // Initial fetch only; retries go through `load` explicitly.
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  /* ── Derived slices (pure, memoized) ──────────────────────────────────── */
+  // The UI only ever presents ACTIVE lots on the homepage; other states
+  // belong to the Auctions page and the account surfaces.
+  const active = useMemo(
+    () => auctions.filter((a) => a.status === "active"),
+    [auctions]
+  );
+
+  // Featured = the most urgent live lot. The hero leads with urgency.
+  const featured = active[0] ?? null;
+
+  /* ── Render ───────────────────────────────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden">
+    <div className="space-y-20 pb-20">
+      {/* ══ HERO: statement left, live lot right ══ */}
+      <section className="mx-auto grid w-full max-w-7xl gap-10 px-4 pt-14 md:px-8 lg:grid-cols-2 lg:gap-16 lg:pt-20">
+        {/* Left — the editorial statement */}
+        <div className="flex flex-col justify-center space-y-8">
+          <p className="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.25em] text-primary">
+            <span className="h-1 w-1 animate-pulse rounded-full bg-primary" />
+            Live Auction
+          </p>
 
-      {/* Navigation - Clean, solid borders, no gradient lines */}
-      <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/90 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-          <div className="flex justify-center mb-6">
-            <Logo size="lg" href="/" className="mt-7" />
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Link href="/login">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button size="sm" className="bg-gold text-background font-semibold hover:bg-amber-400 transition-colors">
-                Get Started
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section - Pure, solid, typographic focus */}
-      <section className="relative min-h-[90vh] flex items-center justify-center px-6 lg:px-8 bg-background">
-        <div className="relative z-10 mx-auto max-w-5xl text-center">
-
-          {/* Headline - Solid colors, maximum impact */}
-          <h1 className="font-display text-xl md:text-xl lg:text-7xl font-semibold leading-[1.05] tracking-tight mb-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-            The Last Call for
+          <h1 className="font-serif text-5xl leading-[1.05] text-foreground md:text-6xl">
+            The market moves.
             <br />
-            <span className="text-gold">Extraordinary Pieces</span>
+            You decide.
           </h1>
 
-          {/* Subheadline */}
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-up" style={{ animationDelay: '0.2s' }}>
-            Where collectors, investors, and connoisseurs compete for verified masterpieces
-            in a secure, real-time marketplace.
+          <p className="max-w-md text-base leading-relaxed text-muted-foreground">
+            Rare objects. Real competition. One final bid.
           </p>
 
-          {/* CTAs - Solid, authoritative buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-up" style={{ animationDelay: '0.3s' }}>
-            <Link href="/register">
-              <Button size="lg" className="h-14 px-10 text-base bg-gold text-background font-semibold hover:bg-amber-400 shadow-xl shadow-gold/10 transition-all hover:scale-105">
-                Start Bidding
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-            <Link href="/auctions">
-              <Button variant="outline" size="lg" className="h-14 px-10 text-base border-border bg-transparent hover:border-gold/50 hover:text-gold transition-all">
-                Browse Auctions
-              </Button>
-            </Link>
-          </div>
-
-          {/* Feature highlights - Minimal, clean, solid backgrounds */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto animate-fade-up" style={{ animationDelay: '0.4s' }}>
-            {[
-              { icon: Shield, label: "Verified Sellers", desc: "100% authenticated" },
-              { icon: Clock, label: "Real-Time Bids", desc: "Millisecond precision" },
-              { icon: TrendingUp, label: "Secure Escrow", desc: "Protected transactions" },
-            ].map((item, i) => (
-              <div key={item.label} className="flex flex-col items-center gap-3 p-4 rounded-xl hover:bg-card transition-colors group">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card group-hover:border-gold/50 group-hover:bg-gold/5 transition-all">
-                  <item.icon className="h-5 w-5 text-gold group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="text-sm font-semibold text-foreground">{item.label}</div>
-                <div className="text-xs text-muted-foreground text-center">{item.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Preview Section - Clean, structured, no gradients */}
-      <section className="border-t border-border py-24 px-6 lg:px-8 bg-card/30">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex items-end justify-between mb-12">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-gold font-medium mb-3">
-                Currently Trending
-              </p>
-              <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground">
-                Featured Auctions
-              </h2>
-            </div>
-            <Link href="/auctions" className="hidden md:flex items-center gap-2 text-sm text-muted-foreground hover:text-gold transition-colors">
-              View All <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          {/* Simple preview cards - Solid colors, sharp borders */}
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { title: "Vintage Patek Philippe", bid: "$12,500", time: "2h 34m" },
-              { title: "Rare Diamond Necklace", bid: "$45,000", time: "5h 12m" },
-              { title: "1965 Shelby Cobra", bid: "$890,000", time: "1d 3h" },
-            ].map((item, i) => (
-              <div key={item.title} className="group p-6 rounded-xl border border-border bg-card hover:border-gold/40 transition-all duration-300 animate-fade-up" style={{ animationDelay: `${i * 0.1}s` }}>
-                <div className="aspect-[4/3] rounded-lg bg-secondary mb-4 overflow-hidden border border-border/50">
-                  {/* Solid placeholder, absolutely no gradients */}
-                  <div className="w-full h-full bg-muted/50 group-hover:bg-muted transition-colors duration-500 flex items-center justify-center">
-                    <span className="text-muted-foreground/30 font-display text-2xl">Image</span>
-                  </div>
-                </div>
-                <h3 className="font-display text-lg font-semibold text-foreground mb-3">{item.title}</h3>
-                <div className="flex items-center justify-between text-sm border-t border-border pt-3">
-                  <span className="text-gold font-semibold">{item.bid}</span>
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" /> {item.time}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Simple CTA - Bold, solid, direct */}
-      <section className="py-32 px-6 lg:px-8 bg-background">
-        <div className="mx-auto max-w-4xl text-center">
-          <h2 className="font-display text-4xl md:text-6xl font-semibold text-foreground mb-6 leading-tight">
-            Ready to Make Your
-            <br />
-            <span className="text-gold">Winning Bid?</span>
-          </h2>
-          <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Join thousands of collectors competing for the world's most exceptional pieces.
-          </p>
-          <Link href="/register">
-            <Button size="lg" className="h-14 px-10 text-base bg-gold text-background font-semibold hover:bg-amber-400 shadow-xl shadow-gold/10 transition-all">
-              Create Free Account
-              <ArrowRight className="ml-2 h-5 w-5" />
+          <div className="flex flex-wrap items-center gap-4">
+            <Button size="lg" onClick={() => undefined} asChild>
+              <a href="/auctions">Explore Live Auctions</a>
             </Button>
-          </Link>
+            <Button variant="outline" size="lg" asChild>
+              {/* Auth-aware: sellers go straight to creation, guests to auth. */}
+              <a href={isAuthenticated ? "/auctions/create" : "/login"}>Sell an Item</a>
+            </Button>
+          </div>
         </div>
+
+        {/* Right — the hero IS an auction */}
+        {status === "loading" ? (
+          <HeroSkeleton />
+        ) : featured ? (
+          <HeroLot auction={featured} />
+        ) : (
+          // Quiet floor: no live lots yet. Designed, not broken.
+          <div className="flex flex-col items-center justify-center border border-dashed border-border bg-card/40 p-10 text-center">
+            <p className="font-serif text-2xl text-foreground">The floor is quiet.</p>
+            <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
+              No live auctions right now. Be the first to list something extraordinary.
+            </p>
+            <Button variant="outline" className="mt-6" asChild>
+              <a href={isAuthenticated ? "/auctions/create" : "/login"}>Sell an Item</a>
+            </Button>
+          </div>
+        )}
       </section>
 
-      {/* Footer - Minimal, structured */}
-      <footer className="border-t border-border py-12 px-6 lg:px-8 bg-background">
-        <div className="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <span className="font-display text-sm font-bold text-foreground">
-            Last<span className="text-gold">Call</span>
-          </span>
+      {/* ══ LIVE TICKER: the market's pulse ══ */}
+      {status === "ready" && <LiveTicker auctions={active} />}
 
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link href="/auctions" className="hover:text-gold transition-colors">Auctions</Link>
-            <Link href="/login" className="hover:text-gold transition-colors">Sign In</Link>
-          </div>
+      {/* ══ LIVE AUCTIONS: real inventory ══ */}
+      <section className="mx-auto w-full max-w-7xl space-y-8 px-4 md:px-8">
+        <SectionHeading
+          overline="Live Now"
+          title="Live Auctions"
+          description="What's moving right now. Every lot verified."
+          action={
+            <Button variant="ghost" size="sm" asChild>
+              <a href="/auctions">View All</a>
+            </Button>
+          }
+        />
 
-          <p className="text-sm text-muted-foreground">© 2026 LastCall.</p>
+        {status === "error" ? (
+          <ErrorState
+            title="Couldn't reach the market"
+            description="Live inventory didn't arrive. Check your connection and try again."
+            action={
+              <Button variant="outline" size="sm" onClick={load}>
+                Retry
+              </Button>
+            }
+          />
+        ) : status === "ready" && active.length === 0 ? (
+          <EmptyState
+            icon={Gavel}
+            title="No live auctions"
+            description="Be the first to list something extraordinary."
+            action={
+              <Button variant="outline" size="sm" asChild>
+                <a href={isAuthenticated ? "/auctions/create" : "/login"}>Sell an Item</a>
+              </Button>
+            }
+          />
+        ) : (
+          <AuctionGrid auctions={active} loading={status === "loading"} skeletonCount={6} />
+        )}
+      </section>
+
+      {/* ══ CATEGORY INDEX ══ */}
+      <section className="mx-auto w-full max-w-7xl space-y-8 px-4 md:px-8">
+        <SectionHeading
+          overline="Browse"
+          title="Categories"
+          description="Every department of the house."
+        />
+        <CategoryIndex />
+      </section>
+
+      {/* ══ HOW LASTCALL WORKS: trust mechanics, not marketing cards ══ */}
+      <section className="mx-auto w-full max-w-7xl px-4 md:px-8">
+        <div className="grid divide-y divide-border border border-border md:grid-cols-3 md:divide-x md:divide-y-0">
+          <HowStep number="01" title="Watch" copy="Follow lots as the clock runs." />
+          <HowStep number="02" title="Bid" copy="Funds are reserved only while you lead." />
+          <HowStep number="03" title="Win" copy="Settlement executes the moment the hammer falls." />
         </div>
-      </footer>
+      </section>
+    </div>
+  );
+}
+
+/* ── Internal presentational helpers ─────────────────────────────────────── */
+
+/** Mirrors HeroLot geometry so the loading swap never shifts layout. */
+function HeroSkeleton() {
+  return (
+    <div className="border border-border bg-card">
+      <Skeleton className="aspect-[4/3] w-full rounded-none" />
+      <div className="space-y-4 p-6">
+        <div className="flex justify-between">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-3 w-12" />
+        </div>
+        <Skeleton className="h-7 w-3/4" />
+        <div className="flex items-end justify-between border-t border-border pt-4">
+          <Skeleton className="h-9 w-24" />
+          <Skeleton className="h-5 w-16" />
+        </div>
+        <Skeleton className="h-10 w-full" />
+      </div>
+    </div>
+  );
+}
+
+/** One cell of the "how it works" strip. Serif numerals, hairline dividers. */
+function HowStep({ number, title, copy }: { number: string; title: string; copy: string }) {
+  return (
+    <div className="space-y-3 p-8">
+      <p className="font-serif text-3xl text-primary/70 tabular-nums">{number}</p>
+      <h3 className="text-sm font-medium uppercase tracking-[0.2em] text-foreground">{title}</h3>
+      <p className="text-sm leading-relaxed text-muted-foreground">{copy}</p>
     </div>
   );
 }
