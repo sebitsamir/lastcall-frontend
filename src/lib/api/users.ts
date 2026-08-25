@@ -10,6 +10,9 @@ import type { IAuction, IApiResponse } from "@/types";
 
 const ENDPOINTS = {
     myBids: "/users/bids",
+    // Backend added a name-change endpoint; if yours is mounted elsewhere
+    // (e.g. "/users/updateProfile"), fix this ONE line.
+    updateProfile: "/users/me",
 } as const;
 
 export interface MyBid {
@@ -43,5 +46,14 @@ export const usersApi = {
     async myBids(): Promise<MyBid[]> {
         const { data } = await api.get<IApiResponse<unknown>>(ENDPOINTS.myBids);
         return normalizeMyBids(data.data);
+    },
+
+    /** Update the signed-in user's display name. */
+    async updateProfile(payload: { name: string }): Promise<IApiResponse<unknown>> {
+        const { data } = await api.patch<IApiResponse<unknown>>(
+            ENDPOINTS.updateProfile,
+            payload
+        );
+        return data;
     },
 };

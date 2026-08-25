@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Wallet, Gavel, Package, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, User, Wallet, Gavel, Package, Settings, LogOut } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
 const links = [
     { href: "/account", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/account/profile", label: "Profile", icon: User },   // ← added
     { href: "/account/wallet", label: "Wallet", icon: Wallet },
     { href: "/account/bids", label: "Active Bids", icon: Gavel },
     { href: "/account/selling", label: "Selling", icon: Package },
@@ -30,8 +31,8 @@ export function DesktopSidebar() {
                             key={link.href}
                             href={link.href}
                             className={`flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors ${isActive
-                                    ? "border-primary bg-white/5 text-foreground"
-                                    : "border-transparent text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                                ? "border-primary bg-white/5 text-foreground"
+                                : "border-transparent text-muted-foreground hover:bg-white/5 hover:text-foreground"
                                 }`}
                         >
                             <link.icon className="h-4 w-4" strokeWidth={1.5} />
