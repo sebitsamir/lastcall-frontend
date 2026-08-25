@@ -30,7 +30,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${instrument.variable} font-sans antialiased bg-background text-foreground`}>
         <AuthProvider>
-          {children}
           <AppShell>{children}</AppShell>
           <Toaster
             theme="dark"
