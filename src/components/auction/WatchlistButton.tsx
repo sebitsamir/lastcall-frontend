@@ -1,10 +1,20 @@
+// src/components/auction/WatchlistButton.tsx
+/**
+ * ────────────────────────────────────────────────────────────────────────────
+ * WATCHLIST BUTTON (upgraded)
+ * Same public interface (auctionId, initialIsWatching) so every existing
+ * usage keeps working. Now with: optimistic toggle + rollback, tap-scale
+ * spring, and a heart "pop" on state change. Motion = state, not decor.
+ * ────────────────────────────────────────────────────────────────────────────
+ */
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
-import { watchlistService } from "@/services/watchlistService";
-import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
+
+import { watchlistApi } from "@/lib/api/watchlist";
 import { cn } from "@/lib/utils";
 
 interface WatchlistButtonProps {
@@ -16,59 +26,54 @@ interface WatchlistButtonProps {
 export function WatchlistButton({
     auctionId,
     initialIsWatching = false,
-    className
+    className,
 }: WatchlistButtonProps) {
-    const [isWatching, setIsWatching] = useState(initialIsWatching);
-    const { isAuthenticated, user } = useAuthStore();
+    const [watching, setWatching] = useState(initialIsWatching);
+    const [busy, setBusy] = useState(false);
 
-    const handleToggle = async (e: React.MouseEvent) => {
+    const toggle = async (e: React.MouseEvent) => {
+        // The button often lives inside a card <Link> — don't navigate on tap.
         e.preventDefault();
         e.stopPropagation();
+        if (busy) return;
 
-        // Check if user is authenticated FIRST
-        if (!isAuthenticated || !user) {
-            toast.error("Please log in to save auctions", {
-                description: "You need to be logged in to use the watchlist feature.",
-                action: {
-                    label: "Sign In",
-                    onClick: () => window.location.href = "/login",
-                },
-            });
-            return;
-        }
-
-        const previousState = isWatching;
-        setIsWatching(!previousState);
+        setBusy(true);
+        const next = !watching;
+        setWatching(next); // optimistic — the heart reacts instantly
 
         try {
-            await watchlistService.toggle(auctionId);
-            toast.success(
-                !previousState ? "Added to watchlist" : "Removed from watchlist"
-            );
-        } catch (error: any) {
-            // Revert on error
-            setIsWatching(previousState);
-
-            // Show specific error message
-            const errorMessage = error.response?.data?.message || "Failed to update watchlist";
-            toast.error(errorMessage);
-            console.error("Watchlist error:", error);
+            await watchlistApi.toggle(auctionId);
+            toast.success(next ? "Added to watchlist" : "Removed from watchlist");
+        } catch {
+            setWatching(!next); // rollback — the UI never lies
+            toast.error("Couldn't update your watchlist");
+        } finally {
+            setBusy(false);
         }
     };
 
     return (
-        <button
-            onClick={handleToggle}
+        <motion.button
+            whileTap={{ scale: 0.85 }} // tactile press feedback
+            onClick={toggle}
+            disabled={busy}
+            aria-label={watching ? "Remove from watchlist" : "Add to watchlist"}
+            aria-pressed={watching}
             className={cn(
-                "absolute top-4 right-4 z-10 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 border",
-                isWatching
-                    ? "bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30 shadow-[0_0_15px_rgba(248,113,113,0.3)]"
-                    : "bg-black/40 text-muted-foreground border-white/10 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10",
+                "flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/80 backdrop-blur-sm transition-colors",
+                watching ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 className
             )}
-            aria-label={isWatching ? "Remove from watchlist" : "Add to watchlist"}
         >
-            <Heart className={cn("h-5 w-5 transition-transform duration-300", isWatching && "fill-current scale-110")} />
-        </button>
+            {/* Keyed by state so the heart "pops" on every toggle */}
+            <motion.span
+                key={String(watching)}
+                initial={{ scale: 0.6 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 500, damping: 25 }}
+            >
+                <Heart className={cn("h-4 w-4", watching && "fill-current")} strokeWidth={1.5} />
+            </motion.span>
+        </motion.button>
     );
 }

@@ -13,7 +13,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Heart } from "lucide-react";
+import { ArrowLeft } from "lucide-react"; // Removed unused 'Heart' import
 import { toast } from "sonner";
 
 import type { IAuction } from "@/types";
@@ -38,11 +38,17 @@ import { BidPanel } from "@/components/bidding/BidPanel";
 import { MorphingMoney } from "@/components/bidding/MorphingMoney";
 import { WatchlistButton } from "@/components/auction/WatchlistButton";
 
+
+import { PageTransition } from "@/components/layout/PageTransition";
+import { usePageTitle } from "@/hooks/usePageTitle";
+import { MobileBidBar } from "@/components/bidding/MobileBidBar";
+
 export default function AuctionDetailPage() {
     const params = useParams();
     const auctionId = params.id as string;
 
     const { user } = useAuthStore();
+    const bidPanelRef = useRef<HTMLDivElement>(null);
 
     /* ── Server state ─────────────────────────────────────────────────────── */
     const [auction, setAuction] = useState<IAuction | null>(null);
@@ -161,139 +167,156 @@ export default function AuctionDetailPage() {
 
     const isActive = auction.status === "active";
 
+    // Dynamic browser tab title
+    usePageTitle(auction ? `${auction.title} — LastCall` : "Auction — LastCall");
+
     /* ── Render ──────────────────────────────────────────────────────────── */
     return (
-        <div className="mx-auto w-full max-w-7xl px-4 py-10 md:px-8">
-            {/* Quiet breadcrumb back to the floor */}
-            <Link
-                href="/auctions"
-                className="mb-8 inline-flex items-center gap-2 text-xs uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:text-foreground"
-            >
-                <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
-                Auctions
-            </Link>
+        // Page transition wrapper + extra bottom padding for mobile bars
+        <PageTransition>
+            <div className="mx-auto w-full max-w-7xl px-4 py-10 pb-28 md:px-8 md:pb-10">
+                {/* Quiet breadcrumb back to the floor */}
+                <Link
+                    href="/auctions"
+                    className="mb-8 inline-flex items-center gap-2 text-xs uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                    <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    Auctions
+                </Link>
 
-            <div className="grid gap-10 lg:grid-cols-[1fr_400px] lg:gap-14">
-                {/* ══ LEFT: editorial gallery + lot dossier ══ */}
-                <div className="min-w-0 space-y-10">
-                    <AuctionGallery images={auction.images ?? []} title={auction.title} />
+                <div className="grid gap-10 lg:grid-cols-[1fr_400px] lg:gap-14">
+                    {/* ══ LEFT: editorial gallery + lot dossier ══ */}
+                    <div className="min-w-0 space-y-10">
+                        <AuctionGallery images={auction.images ?? []} title={auction.title} />
 
-                    {/* About the lot */}
-                    <section className="space-y-3">
-                        <h2 className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            About the Lot
-                        </h2>
-                        <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
-                            {auction.description}
-                        </p>
-                    </section>
+                        {/* About the lot */}
+                        <section className="space-y-3">
+                            <h2 className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                About the Lot
+                            </h2>
+                            <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
+                                {auction.description}
+                            </p>
+                        </section>
 
-                    {/* Lot metadata: hairline table, not cards */}
-                    <section className="grid grid-cols-2 gap-px border border-border bg-border md:grid-cols-4">
-                        <MetaCell label="Lot" value={lotNumber(auction._id)} />
-                        <MetaCell label="Category" value={auction.category} />
-                        <MetaCell label="Starting Price" value={formatMoney(auction.startingPrice ?? 0)} />
-                        <MetaCell
-                            label="Ends"
-                            value={new Date(auction.endTime).toLocaleString()}
+                        {/* Lot metadata: hairline table, not cards */}
+                        <section className="grid grid-cols-2 gap-px border border-border bg-border md:grid-cols-4">
+                            <MetaCell label="Lot" value={lotNumber(auction._id)} />
+                            <MetaCell label="Category" value={auction.category} />
+                            <MetaCell label="Starting Price" value={formatMoney(auction.startingPrice ?? 0)} />
+                            <MetaCell
+                                label="Ends"
+                                value={new Date(auction.endTime).toLocaleString()}
+                            />
+                        </section>
+
+                        {/* Bid activity timeline */}
+                        <section className="space-y-4">
+                            <h2 className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                Bid Activity
+                            </h2>
+                            <BidHistory
+                                bids={bids}
+                                currentUserId={(user as { _id?: string } | null)?._id}
+                            />
+                        </section>
+                    </div>
+
+                    {/* ══ RIGHT: the live bidding engine (sticky) ══ */}
+                    <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+                        {/* Identity row */}
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-2">
+                                <StatusBadge status={auction.status} dot={isActive} />
+                                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                                    Lot {lotNumber(auction._id)} · {auction.category}
+                                </p>
+                            </div>
+                            <WatchlistButton auctionId={auction._id} initialIsWatching={false} />
+                        </div>
+
+                        <h1 className="font-serif text-3xl leading-tight text-foreground">
+                            {auction.title}
+                        </h1>
+
+                        {/* The two numbers that matter: value + time */}
+                        <div className="flex items-end justify-between border-y border-border py-4">
+                            <div>
+                                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                                    Current Bid
+                                </p>
+                                <MorphingMoney
+                                    value={auction.currentBid ?? auction.startingPrice ?? 0}
+                                    className="text-4xl font-medium text-primary"
+                                />
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                                    {isActive ? "Ends In" : "Status"}
+                                </p>
+                                <CountdownTimer endTime={auction.endTime} className="text-xl" />
+                                <p className="mt-1 text-xs tabular-nums text-muted-foreground">
+                                    {bids.length} bids
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Personal outbid surface — escrow made visible */}
+                        {outbid && (
+                            <div className="space-y-2 border border-destructive/40 bg-destructive/10 p-4">
+                                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-destructive">
+                                    You've been outbid
+                                </p>
+                                <p className="text-sm leading-relaxed text-muted-foreground">
+                                    The current bid is now {formatMoney(outbid.currentBid)}.
+                                    {typeof outbid.releasedAmount === "number" && (
+                                        <> Your reserved {formatMoney(outbid.releasedAmount)} has been released.</>
+                                    )}
+                                </p>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setOutbid(null)} // panel below is pre-set to min next
+                                >
+                                    Bid Again
+                                </Button>
+                            </div>
+                        )}
+
+                        {/* Bidding engine vs terminal states */}
+                        {isActive ? (
+                            <div ref={bidPanelRef}>
+                                <BidPanel auction={auction} onBidPlaced={handleBidPlaced} />
+                            </div>
+                        ) : (
+                            <AuctionStateNotice
+                                status={auction.status}
+                                currentBid={auction.currentBid}
+                                startTime={(auction as Record<string, unknown>).startTime as string | undefined}
+                            />
+                        )}
+
+                        {/* Trust surface */}
+                        <SellerCard
+                            name={
+                                typeof auction.seller === "object" && auction.seller
+                                    ? (auction.seller as { name?: string }).name
+                                    : undefined
+                            }
                         />
-                    </section>
-
-                    {/* Bid activity timeline */}
-                    <section className="space-y-4">
-                        <h2 className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            Bid Activity
-                        </h2>
-                        <BidHistory
-                            bids={bids}
-                            currentUserId={(user as { _id?: string } | null)?._id}
-                        />
-                    </section>
+                    </aside>
                 </div>
 
-                {/* ══ RIGHT: the live bidding engine (sticky) ══ */}
-                <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-                    {/* Identity row */}
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-2">
-                            <StatusBadge status={auction.status} dot={isActive} />
-                            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                                Lot {lotNumber(auction._id)} · {auction.category}
-                            </p>
-                        </div>
-                        <WatchlistButton auctionId={auction._id} initialIsWatching={false} />
-                    </div>
-
-                    <h1 className="font-serif text-3xl leading-tight text-foreground">
-                        {auction.title}
-                    </h1>
-
-                    {/* The two numbers that matter: value + time */}
-                    <div className="flex items-end justify-between border-y border-border py-4">
-                        <div>
-                            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                                Current Bid
-                            </p>
-                            <MorphingMoney
-                                value={auction.currentBid ?? auction.startingPrice ?? 0}
-                                className="text-4xl font-medium text-primary"
-                            />
-                        </div>
-                        <div className="text-right">
-                            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                                {isActive ? "Ends In" : "Status"}
-                            </p>
-                            <CountdownTimer endTime={auction.endTime} className="text-xl" />
-                            <p className="mt-1 text-xs tabular-nums text-muted-foreground">
-                                {bids.length} bids
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Personal outbid surface — escrow made visible */}
-                    {outbid && (
-                        <div className="space-y-2 border border-destructive/40 bg-destructive/10 p-4">
-                            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-destructive">
-                                You've been outbid
-                            </p>
-                            <p className="text-sm leading-relaxed text-muted-foreground">
-                                The current bid is now {formatMoney(outbid.currentBid)}.
-                                {typeof outbid.releasedAmount === "number" && (
-                                    <> Your reserved {formatMoney(outbid.releasedAmount)} has been released.</>
-                                )}
-                            </p>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setOutbid(null)} // panel below is pre-set to min next
-                            >
-                                Bid Again
-                            </Button>
-                        </div>
-                    )}
-
-                    {/* Bidding engine vs terminal states */}
-                    {isActive ? (
-                        <BidPanel auction={auction} onBidPlaced={handleBidPlaced} />
-                    ) : (
-                        <AuctionStateNotice
-                            status={auction.status}
-                            currentBid={auction.currentBid}
-                            startTime={(auction as Record<string, unknown>).startTime as string | undefined}
-                        />
-                    )}
-
-                    {/* Trust surface */}
-                    <SellerCard
-                        name={
-                            typeof auction.seller === "object" && auction.seller
-                                ? (auction.seller as { name?: string }).name
-                                : undefined
-                        }
-                    />
-                </aside>
+                {/* Sticky mobile bid bar (hidden on desktop) */}
+                <MobileBidBar
+                    currentBid={auction.currentBid ?? auction.startingPrice ?? 0}
+                    visible={isActive}
+                    onBidClick={() =>
+                        bidPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+                    }
+                />
             </div>
-        </div>
+        </PageTransition>
     );
 }
 

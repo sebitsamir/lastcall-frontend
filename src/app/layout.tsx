@@ -4,6 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { Toaster } from "@/components/ui/sonner"
 import { AppShell } from "@/components/layout/AppShell";
+import { MotionConfig } from "framer-motion";
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -30,7 +32,16 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${instrument.variable} font-sans antialiased bg-background text-foreground`}>
         <AuthProvider>
-          <AppShell>{children}</AppShell>
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:border focus:border-primary focus:bg-background focus:px-4 focus:py-2 focus:text-xs focus:uppercase focus:tracking-widest focus:text-foreground"
+          >
+            Skip to content
+          </a>
+
+          <MotionConfig reducedMotion="user">
+            <AppShell>{children}</AppShell>
+          </MotionConfig>
           <Toaster
             theme="dark"
             position="bottom-right"

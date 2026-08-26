@@ -1,26 +1,45 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react"; 
+
 import { IAuction } from "@/types";
-import { auctionService } from "@/services/auctionService";
-import { AuctionCard } from "@/components/auction/AuctionCard";
+import { auctionService } from "@/services/auctionService"; 
 import { AuctionFilters } from "@/components/auction/AuctionFilters";
+import { AuctionGrid } from "@/components/auction/AuctionGrid"; 
 import { useDebounce } from "@/hooks/useDebounce";
-import { Loader2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { usePageTitle } from "@/hooks/usePageTitle";
+import { PageTransition } from "@/components/layout/PageTransition";
 
 export default function AuctionsPage() {
-    const [auctions, setAuctions] = useState<IAuction[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    // Next.js requires useSearchParams to be wrapped in Suspense
+    return (
+        <Suspense fallback={<PageTransition><div className="h-screen" /></PageTransition>}>
+            <AuctionsPageContent />
+        </Suspense>
+    );
+}
+
+function AuctionsPageContent() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // 1. Hydrate from URL so shared links work (Phase 2/6 polish)
     const [filters, setFilters] = useState({
-        search: "",
-        category: "all",
+        search: searchParams.get("q") || "",
+        category: searchParams.get("category") || "all",
         minPrice: "",
         maxPrice: "",
-        sortBy: "newest",
+        sortBy: (searchParams.get("sortBy") as any) || "newest",
     });
 
-    const debouncedFilters = useDebounce(filters, 500);
+    const [auctions, setAuctions] = useState<IAuction[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const debouncedSearch = useDebounce(filters.search, 500);
+
+    usePageTitle("Auctions — LastCall");
 
     useEffect(() => {
         const fetchAuctions = async () => {
@@ -28,10 +47,10 @@ export default function AuctionsPage() {
             try {
                 const apiFilters = {
                     category: filters.category !== "all" ? filters.category : undefined,
-                    sortBy: filters.sortBy as any,
-                    search: debouncedFilters.search || undefined,
-                    minPrice: debouncedFilters.minPrice ? Number(debouncedFilters.minPrice) : undefined,
-                    maxPrice: debouncedFilters.maxPrice ? Number(debouncedFilters.maxPrice) : undefined,
+                    sortBy: filters.sortBy,
+                    search: debouncedSearch || undefined,
+                    minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
+                    maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
                 };
                 const data = await auctionService.getActiveAuctions(apiFilters);
                 setAuctions(Array.isArray(data) ? data : []);
@@ -42,7 +61,16 @@ export default function AuctionsPage() {
             }
         };
         fetchAuctions();
-    }, [debouncedFilters, filters.category, filters.sortBy]);
+    }, [debouncedSearch, filters.category, filters.sortBy, filters.minPrice, filters.maxPrice]);
+
+    useEffect(() => {
+        const params = new URLSearchParams();
+        if (filters.category !== "all") params.set("category", filters.category);
+        if (debouncedSearch) params.set("q", debouncedSearch);
+        if (filters.sortBy !== "newest") params.set("sortBy", filters.sortBy);
+
+        router.replace(`/auctions${params.toString() ? `?${params}` : ""}`, { scroll: false });
+    }, [filters.category, debouncedSearch, filters.sortBy, router]);
 
     const handleFilterChange = (key: string, value: string) => {
         setFilters((prev) => ({ ...prev, [key]: value }));
@@ -53,60 +81,48 @@ export default function AuctionsPage() {
     };
 
     return (
-        <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 space-y-10">
-            {/* Header - Clean, editorial, no fluff */}
-            <div className="animate-fade-up space-y-3">
-                <p className="text-xs uppercase tracking-[0.3em] text-gold font-medium">
-                    Live Marketplace
-                </p>
-                <h1 className="font-display text-4xl md:text-5xl font-semibold text-foreground leading-tight">
-                    Curated Auctions
-                </h1>
-                <p className="text-muted-foreground max-w-2xl text-base leading-relaxed">
-                    Discover exceptional pieces and place your bid in real-time. 
-                    Every item is verified and authenticated.
-                </p>
-            </div>
+        // PageTransition wraps the entire page for smooth route changes
+        <PageTransition>
+            <div className="mx-auto max-w-7xl px-4 py-10 md:px-8 space-y-10">
+                {/* Header - Clean, editorial, no fluff */}
+                <div className="space-y-3">
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-medium">
+                        Live Marketplace
+                    </p>
+                    <h1 className="font-serif text-4xl md:text-5xl font-semibold text-foreground leading-tight">
+                        Curated Auctions
+                    </h1>
+                    <p className="text-muted-foreground max-w-2xl text-base leading-relaxed">
+                        Discover exceptional pieces and place your bid in real-time.
+                        Every item is verified and authenticated.
+                    </p>
+                </div>
 
-            <div className="grid gap-10 lg:grid-cols-4">
-                {/* Filters Sidebar */}
-                <aside className="lg:col-span-1 animate-fade-up-delay-1">
-                    <Card className="border-border bg-card sticky top-24">
-                        <CardContent className="p-6">
-                            <AuctionFilters
-                                filters={filters}
-                                onFilterChange={handleFilterChange}
-                                onClear={clearFilters}
-                            />
-                        </CardContent>
-                    </Card>
-                </aside>
-
-                {/* Main Grid */}
-                <main className="lg:col-span-3">
-                    {isLoading ? (
-                        <div className="flex justify-center items-center h-96">
-                            <div className="flex flex-col items-center gap-4">
-                                <Loader2 className="h-10 w-10 animate-spin text-gold" />
-                                <p className="text-sm text-muted-foreground">Loading auctions...</p>
+                <div className="grid gap-10 lg:grid-cols-4">
+                    {/* Filters Sidebar */}
+                    <aside className="lg:col-span-1">
+                        <div className="border border-border bg-card sticky top-24 rounded-sm">
+                            <div className="p-6">
+                                <AuctionFilters
+                                    filters={filters}
+                                    onFilterChange={handleFilterChange}
+                                    onClear={clearFilters}
+                                />
                             </div>
                         </div>
-                    ) : auctions.length === 0 ? (
-                        <Card className="border-border bg-card">
-                            <CardContent className="p-16 text-center space-y-3">
-                                <p className="font-display text-2xl text-foreground">No auctions found</p>
-                                <p className="text-muted-foreground text-sm">Try adjusting your filters to see more results.</p>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                            {auctions.map((auction, index) => (
-                                <AuctionCard key={auction._id} auction={auction} index={index} />
-                            ))}
-                        </div>
-                    )}
-                </main>
+                    </aside>
+
+                    {/* Main Grid - Replaced manual loading/empty states with premium AuctionGrid */}
+                    <main className="lg:col-span-3">
+                        <AuctionGrid
+                            auctions={auctions}
+                            loading={isLoading}
+                            skeletonCount={6}
+                            onClearFilters={clearFilters}
+                        />
+                    </main>
+                </div>
             </div>
-        </div>
+        </PageTransition>
     );
 }

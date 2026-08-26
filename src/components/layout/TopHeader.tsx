@@ -19,7 +19,7 @@ export function TopHeader() {
                 <Link href="/auctions" className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
                     Auctions
                 </Link>
-                <Link href="/auctions" className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
+                <Link href="/categories" className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
                     Categories
                 </Link>
                 {isAuthenticated && (

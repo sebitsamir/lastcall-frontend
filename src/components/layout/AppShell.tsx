@@ -5,6 +5,7 @@ import { TopHeader } from "./TopHeader";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { useAuthStore } from "@/store/authStore";
+import { PageTransition } from "./PageTransition";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -31,7 +32,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             <div className="flex flex-1">
                 {isAuthenticated && <DesktopSidebar />}
-                <main className="w-full min-w-0 flex-1 pb-16 md:pb-0">{children}</main>
+                <main id="main-content" className="flex-1 w-full min-w-0 pb-16 md:pb-0">
+                    <PageTransition>{children}</PageTransition>
+                </main>
             </div>
 
             <MobileBottomNav />
