@@ -1,108 +1,124 @@
+// src/components/auth/RegisterForm.tsx
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import Cookies from "js-cookie";
 
-import { registerSchema, RegisterValues } from "@/lib/validators";
-import { authService } from "@/services/authService";
+import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
-
 import { Button } from "@/components/ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+import { Input } from "@/components/ui/input";
+import { Field } from "@/components/ui/field";
 
 export function RegisterForm() {
     const router = useRouter();
-    const setAuth = useAuthStore((state) => state.setAuth);
-    const [error, setError] = useState<string | null>(null);
+    const initializeAuth = useAuthStore((s) => s.initializeAuth);
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors, isSubmitting },
-    } = useForm<RegisterValues>({
-        resolver: zodResolver(registerSchema),
-        defaultValues: { name: "", email: "", password: "" },
-    });
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const onSubmit = async (data: RegisterValues) => {
-        setError(null);
+    const validate = () => {
+        const e: Record<string, string> = {};
+        if (name.trim().length < 2) e.name = "Name must be at least 2 characters.";
+        if (!/^\S+@\S+\.\S+$/.test(email.trim())) e.email = "Enter a valid email address.";
+        if (password.length < 8) e.password = "Password must be at least 8 characters.";
+        return e;
+    };
+
+    const submit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const errs = validate();
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs);
+            return;
+        }
+
+        setErrors({});
+        setLoading(true);
         try {
-            const { user } = await authService.register(data);
-            setAuth(user);
-            toast.success("Account created successfully!");
-            router.push("/auctions");
-        } catch (err: any) {
-            const errorMessage = err.response?.data?.message || "Registration failed.";
-            setError(errorMessage);
-            toast.error(errorMessage);
+            const { data } = await api.post("/auth/register", {
+                name: name.trim(),
+                email: email.trim(),
+                password,
+            });
+
+            // Some backends auto-login on register; handle both behaviors.
+            const payload = ((data as Record<string, unknown>)?.data ?? data) as Record<string, unknown>;
+
+            if (payload?.accessToken) {
+                Cookies.set("accessToken", String(payload.accessToken));
+                if (payload.refreshToken) Cookies.set("refreshToken", String(payload.refreshToken));
+                await initializeAuth();
+                toast.success("Welcome to the house. Your account is ready.");
+                router.push("/account");
+            } else {
+                toast.success("Account created. Sign in to continue.");
+                router.push("/login");
+            }
+        } catch (err) {
+            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+            setErrors({ form: msg ?? "Couldn't create your account. Try again." });
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div className="space-y-2">
-                <Label htmlFor="name" className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Full Name
-                </Label>
+        <form onSubmit={submit} className="space-y-5" noValidate>
+            <Field label="Full Name" htmlFor="reg-name" error={errors.name}>
                 <Input
-                    id="name"
+                    id="reg-name"
+                    autoComplete="name"
                     placeholder="John Doe"
-                    {...register("name")}
-                    className="bg-background border-border focus:border-gold/50 focus:ring-gold/20"
+                    value={name}
+                    onChange={(e) => { setName(e.target.value); setErrors((p) => ({ ...p, name: "" })); }}
                 />
-                {errors.name && (
-                    <p className="text-sm text-destructive">{errors.name.message}</p>
-                )}
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Email Address
-                </Label>
+            <Field label="Email" htmlFor="reg-email" error={errors.email}>
                 <Input
-                    id="email"
+                    id="reg-email"
                     type="email"
+                    autoComplete="email"
                     placeholder="you@example.com"
-                    {...register("email")}
-                    className="bg-background border-border focus:border-gold/50 focus:ring-gold/20"
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: "" })); }}
                 />
-                {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email.message}</p>
-                )}
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Password
-                </Label>
-                <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    {...register("password")}
-                    className="bg-background border-border focus:border-gold/50 focus:ring-gold/20"
-                />
-                {errors.password && (
-                    <p className="text-sm text-destructive">{errors.password.message}</p>
-                )}
-            </div>
-
-            {error && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center">
-                    {error}
+            <Field label="Password" htmlFor="reg-password" error={errors.password} hint="Min. 8 characters">
+                <div className="relative">
+                    <Input
+                        id="reg-password"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: "" })); }}
+                        className="pr-10"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                        {showPassword ? <EyeOff className="h-4 w-4" strokeWidth={1.5} /> : <Eye className="h-4 w-4" strokeWidth={1.5} />}
+                    </button>
                 </div>
-            )}
+            </Field>
 
-            <Button
-                type="submit"
-                className="w-full h-12 bg-gold text-background font-semibold hover:bg-amber-400 transition-colors"
-                disabled={isSubmitting}
-            >
-                {isSubmitting ? "Creating account..." : "Create Account"}
+            {errors.form && <p className="text-xs text-destructive">{errors.form}</p>}
+
+            <Button type="submit" size="lg" className="w-full" loading={loading}>
+                Create Account
             </Button>
         </form>
     );
