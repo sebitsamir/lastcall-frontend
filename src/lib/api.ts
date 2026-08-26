@@ -9,9 +9,6 @@ const API_BASE_URL =
 const api = axios.create({
     baseURL: API_BASE_URL,
     withCredentials: true, // Critical (allows sending and receiving HttpOnly cookies)
-    headers: {
-        "Content-Type": "application/json",
-    },
 });
 
 const isAuthCredentialRequest = (url?: string) => {
@@ -24,16 +21,14 @@ const isAuthCredentialRequest = (url?: string) => {
 };
 
 // 2. Request Interceptor (runs before every request)
-api.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
-        const token = Cookies.get("accessToken");
-        if (token && config.headers) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error: AxiosError) => Promise.reject(error)
-);
+api.interceptors.request.use((config) => {
+    // Only force JSON if the payload is NOT a FormData object
+    if (!(config.data instanceof FormData)) {
+        config.headers["Content-Type"] = "application/json";
+    }
+    // ... (your auth token logic)
+    return config;
+});
 
 // 3. Response Interceptor (runs after every response)
 api.interceptors.response.use(

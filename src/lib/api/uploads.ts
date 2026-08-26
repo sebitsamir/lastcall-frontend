@@ -46,8 +46,7 @@ export const uploadsApi = {
         form.append("image", file);
 
         const { data } = await api.post(ENDPOINTS.upload, form, {
-            // Let the browser set the multipart boundary — never hand-set it fully.
-            headers: { "Content-Type": "multipart/form-data" },
+        
         });
 
         return normalizeImageUrl(data);

@@ -35,7 +35,7 @@ interface WatchlistRowProps {
     onUnwatch: (id: string) => void;
 }
 
-export function WatchlistRow({ auction, state, busy, onUnwatch }: WatchlistRowProps) {
+export function WatchListRow({ auction, state, busy, onUnwatch }: WatchlistRowProps) {
     const badge = STATE_BADGE[state];
 
     return (
