@@ -129,7 +129,7 @@ function normalizeAuctionList(payload: unknown): IAuction[] {
  * Strip `undefined` keys so Axios doesn't serialize them into the querystring
  * as empty params (e.g. `?category=`), which would confuse backend filters.
  */
-function prune<T extends Record<string, unknown>>(obj: T): Partial<T> {
+function prune<T extends object>(obj: T): Partial<T> {
     return Object.fromEntries(
         Object.entries(obj).filter(([, v]) => v !== undefined && v !== "")
     ) as Partial<T>;

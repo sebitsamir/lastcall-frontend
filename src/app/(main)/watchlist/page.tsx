@@ -60,10 +60,12 @@ export default function WatchlistPage() {
 
                 // Degrade gracefully: no bids data → no outbid verdicts, nothing crashes.
                 if (bidsResult.status === "fulfilled") {
-                    bidIds.current = new Set(
-                        bidsResult.value
-                            .map((b) => b.auction?._id)
-                            .filter((v): v is string => Boolean(v))
+                    setBidIds(
+                        new Set(
+                            bidsResult.value
+                                .map((b) => b.auction?._id)
+                                .filter((v): v is string => Boolean(v))
+                        )
                     );
                 }
 
@@ -152,7 +154,7 @@ export default function WatchlistPage() {
                         <WatchListRow
                             key={auction._id}
                             auction={auction}
-                            state={deriveWatchState(auction, userId, bidIds.current)}
+                            state={deriveWatchState(auction, userId, bidIds)}
                             busy={pendingId === auction._id}
                             onUnwatch={handleUnwatch}
                         />

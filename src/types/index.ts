@@ -29,6 +29,7 @@ export interface IAuction {
     status: "upcoming" | "active" | "completed" | "cancelled";
     createdAt: string;
     updatedAt: string;
+    [key: string]: any;
 }
 
 // 3. Standard Api Response (matches ApiResponse utility)

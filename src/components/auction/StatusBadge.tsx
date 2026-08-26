@@ -9,10 +9,10 @@ const CONFIG: Record<AuctionStatus, { label: string; variant: "live" | "upcoming
     cancelled: { label: "Cancelled", variant: "cancelled" },
 };
 
-export function StatusBadge({ status, className }: { status: string; className?: string }) {
+export function StatusBadge({ status, dot, className }: { status: string; dot?: boolean; className?: string }) {
     const c = CONFIG[status as AuctionStatus] ?? CONFIG.completed;
     return (
-        <Badge variant={c.variant} dot={c.dot} className={className}>
+        <Badge variant={c.variant} dot={dot ?? c.dot} className={className}>
             {c.label}
         </Badge>
     );
