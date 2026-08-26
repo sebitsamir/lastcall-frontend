@@ -58,6 +58,9 @@ export default function AuctionDetailPage() {
 
     const requestId = useRef(0); // stale-response guard for the initial fetch
 
+    // Dynamic browser tab title
+    usePageTitle(auction ? `${auction.title} — LastCall` : "Auction — LastCall");
+
     /* ── Initial fetch ────────────────────────────────────────────────────── */
     const load = useCallback(() => {
         const id = ++requestId.current;
@@ -166,9 +169,6 @@ export default function AuctionDetailPage() {
     }
 
     const isActive = auction.status === "active";
-
-    // Dynamic browser tab title
-    usePageTitle(auction ? `${auction.title} — LastCall` : "Auction — LastCall");
 
     /* ── Render ──────────────────────────────────────────────────────────── */
     return (
