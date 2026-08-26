@@ -1,79 +1,85 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+// src/lib/api.ts
+import axios from "axios";
 import Cookies from "js-cookie";
-import { IApiResponse } from "@/types";
+import { toast } from "sonner";
 
+// PRODUCTION-SAFE: No silent localhost fallback
 const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
+    process.env.NEXT_PUBLIC_API_URL ||
+    (process.env.NODE_ENV === "development"
+        ? "http://localhost:5000/api/v1"
+        : undefined);
 
-// 1. Create the Base Instance
+if (!API_BASE_URL) {
+    throw new Error(
+        "NEXT_PUBLIC_API_URL is not configured. Set it in your environment variables (Vercel dashboard for production, .env.local for development)."
+    );
+}
+
 const api = axios.create({
     baseURL: API_BASE_URL,
-    withCredentials: true, // Critical (allows sending and receiving HttpOnly cookies)
+    withCredentials: true, // For httpOnly cookies if you use them
 });
 
-const isAuthCredentialRequest = (url?: string) => {
-    if (!url) return false;
-    return (
-        url.includes("/auth/login") ||
-        url.includes("/auth/register") ||
-        url.includes("/auth/refresh")
-    );
-};
+// REQUEST INTERCEPTOR: Attach access token to every request
+api.interceptors.request.use(
+    (config) => {
+        const token = Cookies.get("accessToken");
+        if (token && config.headers) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
 
-// 2. Request Interceptor (runs before every request)
-api.interceptors.request.use((config) => {
-    // Only force JSON if the payload is NOT a FormData object
-    if (!(config.data instanceof FormData)) {
-        config.headers["Content-Type"] = "application/json";
-    }
-    // ... (your auth token logic)
-    return config;
-});
+        // Only set JSON if it's not already FormData/multipart
+        if (!(config.data instanceof FormData)) {
+            config.headers["Content-Type"] = "application/json";
+        }
 
-// 3. Response Interceptor (runs after every response)
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// Auto-refresh on 401
 api.interceptors.response.use(
-    (response) => response, // If successful, pass data through
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
 
-    async (error: AxiosError) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & {
-            _retry?: boolean;
-        };
-
-        // Failed login/register must not trigger a silent refresh redirect loop
-        if (
-            error.response?.status === 401 &&
-            !originalRequest._retry &&
-            !isAuthCredentialRequest(originalRequest.url)
-        ) {
+        // If 401 and we haven't already tried to refresh
+        if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
 
             try {
-                const refreshResponse = await axios.post<
-                    IApiResponse<{ accessToken: string }>
-                >(
-                    `${API_BASE_URL}/auth/refresh`,
-                    {},
-                    { withCredentials: true }
-                );
+                const refreshToken = Cookies.get("refreshToken");
+                if (!refreshToken) {
+                    // No refresh token — force logout
+                    Cookies.remove("accessToken");
+                    Cookies.remove("refreshToken");
+                    window.location.href = "/login";
+                    return Promise.reject(error);
+                }
 
-                const newAccessToken = refreshResponse.data.data.accessToken;
-                Cookies.set("accessToken", newAccessToken, {
-                    expires: 1,
-                    sameSite: "lax",
-                    secure:
-                        typeof window !== "undefined" &&
-                        window.location.protocol === "https:",
+                const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+                    refreshToken,
                 });
 
-                if (originalRequest.headers) {
-                    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-                }
+                const payload = (data.data ?? data) as Record<string, unknown>;
+                const newAccessToken = payload.accessToken as string;
+                const newRefreshToken = payload.refreshToken as string | undefined;
+
+                // Store new tokens
+                Cookies.set("accessToken", newAccessToken);
+                if (newRefreshToken) Cookies.set("refreshToken", newRefreshToken);
+
+                // Retry the original request with new token
+                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                 return api(originalRequest);
             } catch (refreshError) {
+                // Refresh failed — force logout
                 Cookies.remove("accessToken");
-                if (typeof window !== "undefined") {
-                    window.location.href = "/login";
-                }
+                Cookies.remove("refreshToken");
+                toast.error("Session expired. Please sign in again.");
+                window.location.href = "/login";
                 return Promise.reject(refreshError);
             }
         }
