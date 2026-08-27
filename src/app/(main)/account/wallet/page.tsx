@@ -66,10 +66,15 @@ export default function WalletPage() {
                 overline="Funds & ledger"
                 title="Wallet"
                 action={
-                    <Button onClick={() => setDialogOpen(true)}>
-                        <Plus className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        Add Funds
-                    </Button>
+                    <div>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                            Demo credit — no real payment is processed yet.
+                        </p>
+                        <Button onClick={() => setDialogOpen(true)}>
+                            <Plus className="h-3.5 w-3.5" strokeWidth={1.5} />
+                            Add Funds
+                        </Button>
+                    </div>
                 }
             />
 
