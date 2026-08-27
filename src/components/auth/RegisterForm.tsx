@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/ui/field";
+import { reconnectSocket } from "@/lib/socket";
 
 export function RegisterForm() {
     const router = useRouter();
@@ -55,6 +56,7 @@ export function RegisterForm() {
             if (payload?.accessToken) {
                 Cookies.set("accessToken", String(payload.accessToken));
                 if (payload.refreshToken) Cookies.set("refreshToken", String(payload.refreshToken));
+                reconnectSocket(); 
                 await initializeAuth();
                 toast.success("Welcome to the house. Your account is ready.");
                 router.push("/account");

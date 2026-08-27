@@ -22,6 +22,9 @@ import { BalanceCard } from "@/components/wallet/BalanceCard";
 import { TransactionList } from "@/components/wallet/TransactionList";
 import { ActiveBids } from "@/components/account/ActiveBids";
 
+import { useLogout } from "@/hooks/useLogout";
+import { LogOut } from "lucide-react";
+
 export default function DashboardPage() {
     const { user, isAuthenticated } = useAuthStore();
 
@@ -31,6 +34,8 @@ export default function DashboardPage() {
 
     // Wallet numbers come straight from the auth store's user — no extra call.
     const wallet = walletSnapshot(user);
+
+    const handleLogout = useLogout();
 
     /* Independent side-fetches: watch count + latest ledger entries. */
     useEffect(() => {
@@ -51,7 +56,7 @@ export default function DashboardPage() {
     const firstName = ((user as { name?: string } | null)?.name ?? "").split(" ")[0];
 
     return (
-        <div className="mx-auto w-full max-w-7xl space-y-10 px-4 py-10 md:px-8">
+        <div className="mx-auto w-full max-w-7xl space-y-10 px-4 py-8 pb-24 md:px-8">
             {/* Personal, time-aware greeting — the account feels inhabited */}
             <SectionHeading
                 overline="Your activity at a glance"
@@ -91,6 +96,17 @@ export default function DashboardPage() {
                 </h2>
                 <TransactionList transactions={recent} loading={ledgerLoading} />
             </section>
+
+            {/* ══ MOBILE-ONLY SIGN OUT BUTTON ══ */}
+            <div className="mt-16 border-t border-border pt-8 md:hidden">
+                <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center justify-center gap-2 rounded-sm border border-destructive/30 bg-destructive/5 py-4 text-sm font-medium uppercase tracking-widest text-destructive transition-colors hover:bg-destructive/10"
+                >
+                    <LogOut className="h-4 w-4" strokeWidth={1.5} />
+                    Sign Out
+                </button>
+            </div>
         </div>
     );
 }

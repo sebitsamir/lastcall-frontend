@@ -2,6 +2,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
+import { reconnectSocket } from "./socket";
 
 // PRODUCTION-SAFE: No silent localhost fallback
 const API_BASE_URL =
@@ -70,6 +71,11 @@ api.interceptors.response.use(
                 // Store new tokens
                 Cookies.set("accessToken", newAccessToken);
                 if (newRefreshToken) Cookies.set("refreshToken", newRefreshToken);
+
+                // Reconnect socket with the newly refreshed token
+                // This ensures the user stays in their private `lastcall:user:{id}` room
+                // and continues receiving outbid notifications without interruption.
+                reconnectSocket();
 
                 // Retry the original request with new token
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;

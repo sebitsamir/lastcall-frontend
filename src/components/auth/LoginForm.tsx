@@ -1,90 +1,117 @@
+// src/components/auth/LoginForm.tsx
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import Cookies from "js-cookie";
 
-import { loginSchema, LoginValues } from "@/lib/validators";
-import { authService } from "@/services/authService";
+import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
-
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+import { reconnectSocket } from "@/lib/socket";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Field } from "@/components/ui/field";
 
 export function LoginForm() {
     const router = useRouter();
-    const setAuth = useAuthStore((state) => state.setAuth);
-    const [error, setError] = useState<string | null>(null);
+    const initializeAuth = useAuthStore((s) => s.initializeAuth);
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors, isSubmitting },
-    } = useForm<LoginValues>({
-        resolver: zodResolver(loginSchema),
-        defaultValues: { email: "", password: "" },
-    });
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const onSubmit = async (data: LoginValues) => {
-        setError(null);
+    const validate = () => {
+        const e: Record<string, string> = {};
+        if (!/^\S+@\S+\.\S+$/.test(email.trim())) e.email = "Enter a valid email address.";
+        if (password.length < 1) e.password = "Password is required.";
+        return e;
+    };
+
+    const submit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const errs = validate();
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs);
+            return;
+        }
+
+        setErrors({});
+        setLoading(true);
         try {
-            const { user } = await authService.login(data);
+            const { data } = await api.post("/auth/login", {
+                email: email.trim(),
+                password,
+            });
 
-            setAuth(user);
-            toast.success(`Welcome back, ${user.name}!`);
-            router.push("/auctions");
+            const payload = ((data as Record<string, unknown>)?.data ?? data) as Record<string, unknown>;
 
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Login failed.");
-            toast.error("Invalid credentials. Please try again.");
+            if (payload.accessToken) {
+                // 1. Persist tokens
+                Cookies.set("accessToken", String(payload.accessToken));
+                if (payload.refreshToken) Cookies.set("refreshToken", String(payload.refreshToken));
+
+                // 2. Reconnect socket with the new authenticated token
+                reconnectSocket();
+
+                // 3. Hydrate the store (fetches /users/me, flips isAuthenticated)
+                await initializeAuth();
+
+                toast.success("Welcome back to the house.");
+                router.push("/auctions");
+            } else {
+                setErrors({ form: "Invalid response from server." });
+            }
+        } catch (err) {
+            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+            setErrors({ form: msg ?? "Invalid credentials. Please try again." });
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+        <form onSubmit={submit} className="space-y-5" noValidate>
+            <Field label="Email" htmlFor="login-email" error={errors.email}>
                 <Input
-                    id="email"
+                    id="login-email"
                     type="email"
+                    autoComplete="email"
                     placeholder="you@example.com"
-                    {...register("email")}
-                    className="bg-background border-border"
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: "" })); }}
                 />
-                {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email.message}</p>
-                )}
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    {...register("password")}
-                    className="bg-background border-border"
-                />
-                {errors.password && (
-                    <p className="text-sm text-destructive">{errors.password.message}</p>
-                )}
-            </div>
-
-            {error && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-                    {error}
+            <Field label="Password" htmlFor="login-password" error={errors.password}>
+                <div className="relative">
+                    <Input
+                        id="login-password"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="current-password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: "" })); }}
+                        className="pr-10"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                        {showPassword ? <EyeOff className="h-4 w-4" strokeWidth={1.5} /> : <Eye className="h-4 w-4" strokeWidth={1.5} />}
+                    </button>
                 </div>
-            )}
+            </Field>
 
-            <Button
-                type="submit"
-                className="w-full h-12 bg-gold text-background font-semibold hover:bg-amber-400 transition-colors"
-                disabled={isSubmitting}
-            >
-                {isSubmitting ? "Signing in..." : "Sign In"}
+            {errors.form && <p className="text-xs text-destructive">{errors.form}</p>}
+
+            <Button type="submit" size="lg" className="w-full" loading={loading}>
+                Sign In
             </Button>
         </form>
     );
