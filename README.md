@@ -1,163 +1,236 @@
-# LastCall - Premium Real-Time Auction Platform
+# LastCall — Frontend
 
-**LastCall** is a high-end, full-stack real-time auction platform where collectors, investors, and connoisseurs compete for verified masterpieces. Built with a focus on security, millisecond-precision bidding, and a bespoke luxury user interface.
+**Real-time auction marketplace interface built with Next.js, TypeScript, and Socket.IO.**
 
-**Live Frontend:** [https://lastcall-frontend.vercel.app]
-**Live Backend API:** [https://lastcall-backend.render.com]
-**Frontend Repo:** [https:/github.com/sebitsamir/lastcall-frontend.git]
-**Backend Repo:** [https://github.com/sebitsamir/lastcall-backend.git]
+LastCall is a full-stack auction platform focused on live bidding, auction discovery, seller workflows, account management, watchlists, and a simulated wallet/ledger system.
 
-## Key Features
+This repository contains the **web application**.
 
-### Real-Time Bidding Engine
+> The wallet currently uses demo credit. No real payment is processed.
 
-- Powered by **Socket.io** for bi-directional, millisecond-precision communication.
-- Instant UI updates via optimistic rendering and WebSocket events when new bids are placed.
-- Live countdown timers that synchronize across all connected clients.
 
-### Enterprise-Grade Security
+## Live application
 
-- **Authentication:** JWT-based auth using **HttpOnly cookies** to prevent XSS attacks, paired with silent refresh token rotation.
-- **Data Sanitization:** Protected against NoSQL injection (`express-mongo-sanitize`), XSS (`xss`), and HTTP Parameter Pollution (`hpp`).
-- **Rate Limiting:** Strict, tiered rate limiting (100 req/15min globally, 10 req/15min for auth endpoints) to prevent brute-force and DoS attacks.
-- **Security Headers:** Implemented via `Helmet.js`.
+**Frontend:** https://lastcall-frontend.vercel.app
 
-### Bespoke Luxury UI/UX
+Backend repository:
 
-- Custom design system built with **Tailwind CSS** and **shadcn/ui**.
-- Editorial typography, sharp borders, and intentional whitespace (zero generic SaaS gradients).
-- Fully responsive, dark-mode-first aesthetic with smooth **Framer Motion** animations.
+https://github.com/sebitsamir/lastcall-backend
 
-### Advanced Functionality
+---
 
-- **Watchlist:** Users can save auctions and track them across sessions (persisted via Zustand & MongoDB).
-- **Smart Filtering:** Debounced search, category filtering, and price range sorting.
-- **State Management:** Global state handled efficiently using **Zustand** with custom Axios interceptors.
+## What LastCall demonstrates
 
-## ️ Tech Stack
+LastCall goes beyond a static marketplace UI.
 
-### Frontend
+The frontend coordinates:
 
-- **Framework:** Next.js 16 (App Router, Turbopack)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS, shadcn/ui, Framer Motion
-- **State Management:** Zustand
-- **Networking:** Axios (Custom interceptors for auth & token refresh), Socket.io-client
+- authenticated application state,
+- auction discovery and filtering,
+- detailed auction views,
+- live bid updates,
+- seller listing creation,
+- watchlists,
+- profile and account flows,
+- bid history,
+- selling activity,
+- wallet balances,
+- transaction ledger pagination,
+- real-time socket events.
 
-### Backend
+The interesting engineering problem is keeping multiple views consistent while auction state can change in real time.
 
-- **Runtime:** Node.js, Express.js
-- **Database:** MongoDB, Mongoose
-- **Real-time:** Socket.io
-- **Security:** Helmet, CORS, Cookie-Parser, Bcrypt, JSON Web Tokens (JWT)
+## Key features
 
-## Architecture & Security Flow
+### Auction marketplace
 
-### Authentication & Token Refresh
+Users can browse auctions, view auction details, explore categories, and work with auction-specific state.
 
-To ensure maximum security, access tokens are never stored in `localStorage`.
+### Real-time bidding
 
-1. Upon login, the backend sets an **HttpOnly cookie** containing the JWT.
-2. The frontend Axios interceptor reads this cookie (via `js-cookie`) and attaches it to the `Authorization: Bearer` header for API requests.
-3. If a request returns a `401 Unauthorized`, the Axios response interceptor **silently** calls the `/auth/refresh` endpoint using the refresh cookie, obtains a new access token, and retries the original failed request without interrupting the user.
+Socket.IO is used to receive live auction updates and keep bidding surfaces synchronized with backend events.
 
-### Real-Time Socket Integration
+### Auction detail experience
 
-- Clients join specific "auction rooms" upon viewing an auction detail page (`socket.emit('joinAuction', id)`).
-- When a bid is placed, the backend validates the bid, updates MongoDB, and broadcasts a `newBid` event exclusively to that room, ensuring low latency and reduced server load.
+The auction detail route combines product information, current bidding state, countdown behavior, bid interaction, and real-time updates in one page.
 
-## Getting Started
+### Seller workflow
 
-### Prerequisites
+Authenticated users can create auction listings and manage selling activity through account views.
 
-- Node.js (v18+)
-- MongoDB (Local or Atlas URI)
+### Watchlist
 
-### 1. Clone the Repositories
+Users can save auctions they want to monitor and return to them from a dedicated watchlist.
 
-````bash
-# Frontend
-git clone [Frontend-Repo-URL]
+### Account center
+
+The application includes account surfaces for:
+
+- profile,
+- bids,
+- selling,
+- wallet,
+- settings.
+
+### Demo wallet and ledger
+
+The wallet separates:
+
+- available balance,
+- funds reserved for bids,
+- total buying power.
+
+Transaction history is paginated and refreshed alongside user balance state after demo deposits.
+
+**Important:** this is currently a simulated credit system—not a production payment wallet.
+
+### Authentication state
+
+The frontend maintains authenticated user state and coordinates authenticated API requests with the LastCall backend.
+
+### Responsive interface
+
+The product uses a dark editorial marketplace aesthetic with responsive layouts, reusable UI components, and motion.
+
+## Technology stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- shadcn
+- Framer Motion
+- Zustand
+- Axios
+- Socket.IO Client
+- React Hook Form
+- Zod
+- Lucide React
+- Sonner
+
+## Application structure
+
+The App Router contains separate authenticated and main application areas.
+
+Representative routes include:
+
+```text
+/login
+/register
+
+/auctions
+/auctions/[id]
+/auctions/create
+
+/categories
+/watchlist
+
+/account
+/account/profile
+/account/bids
+/account/selling
+/account/wallet
+/account/settings
+```
+
+## Backend integration
+
+The frontend communicates with the LastCall API for:
+
+- authentication,
+- auctions,
+- users,
+- uploads,
+- wallet/ledger operations.
+
+Real-time updates are delivered through Socket.IO.
+
+## Getting started
+
+### Requirements
+
+- Node.js 18+
+- LastCall backend running locally or accessible remotely
+
+### Clone
+
+```bash
+git clone https://github.com/sebitsamir/lastcall-frontend.git
 cd lastcall-frontend
+```
 
-# Backend (in a separate terminal)
-git clone [Backend-Repo-URL]
-cd lastcall-backend
+### Install
 
-
-
-
-
-
-## Table of Contents
-- [Key Features](#-key-features)]
-- [Tech Stack](#-tech-stack)]
-- [System Architecture & Security](#-system-architecture--security)
-- [API Endpoints](#-api-endpoints)]
-- [Getting Started](#-getting-started)]
-- [Engineering Challenges & Learnings](#-engineering-challenges--learnings)
-- [Author](#-author)
-
-
-## API Endpoints
-
-### Authentication (`/api/v1/auth`)
-- `POST /register` - Create a new user account (Rate limited)
-- `POST /login` - Authenticate and receive JWT (Rate limited)
-- `POST /refresh` - Silently refresh access token
-- `POST /logout` - Invalidate session
-
-### Auctions (`/api/v1/auctions`)
-- `GET /` - Get all active auctions (supports filtering, pagination, sorting)
-- `GET /:id` - Get single auction details
-- `POST /` - Create a new auction (Admin/Seller)
-- `POST /:id/bid` - Place a real-time bid
-
-### Users (`/api/v1/users`)
-- `GET /me` - Get current user profile
-- `POST /watchlist/:auctionId` - Toggle auction watchlist
-- `GET /watchlist` - Get user's saved auctions
-
-
-### 2. Install Dependencies
+```bash
 npm install
+```
 
-3. Environment Variables
-Backend (lastcall-backend/.env)
-env
-PORT=5000
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_super_secret_jwt_key
-JWT_EXPIRES_IN=1d
-JWT_REFRESH_SECRET=your_super_secret_refresh_key
-JWT_REFRESH_EXPIRES_IN=7d
-CLIENT_URL=http://localhost:3001
+### Environment
 
-Frontend (lastcall-frontend/.env.local)
-env
+Create `.env.local` and configure the public API base URL used by the application.
+
+Example:
+
+```env
 NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
-4. Run the Application
-# Start Backend
+```
+
+Use the actual backend URL for your environment.
+
+### Run
+
+```bash
 npm run dev
-# Start Frontend (in a new terminal)
-npm run dev -- -p 3001
-Visit http://localhost:3001 to view the app.
+```
+
+Open:
+
+```text
+http://localhost:3000
+```
+
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+```
+
+## Architecture notes
+
+### Client state
+
+Zustand is used for global application state where cross-page continuity is required.
+
+### API layer
+
+Axios-based API modules centralize communication with backend resources.
+
+### Real-time layer
+
+Socket.IO Client handles server-pushed auction events rather than relying on aggressive polling.
+
+### Validation
+
+React Hook Form and Zod support structured form handling and validation.
+
+## Current status
+
+The frontend implements a broad marketplace experience and is connected to the LastCall backend.
+
+The project should be described as a **portfolio-grade full-stack auction system** rather than a production financial platform. Payment flows remain simulated.
+
+## Related repository
+
+Backend:
+
+https://github.com/sebitsamir/lastcall-backend
 
 
-Engineering Challenges & Learnings:
+## Author
 
-Building LastCall involved solving several complex, real-world engineering hurdles:
-1.	Mongoose Async Hook Conflicts: Resolved a critical TypeError: next is not a function crash caused by modern Mongoose's handling of async pre-save hooks. Learned the strict distinction between callback-based (function(next)) and promise-based (async function()) middleware execution.
-2.	Deployment Routing Desyncs: Diagnosed and fixed a production 404 error caused by a mismatch between the frontend's compiled Axios baseURL and the backend's Express route mounting. Implemented strict environment variable synchronization between Vercel and Render.
-3.	Dark Mode Autofill Styling: Overcame browser-level CSS overrides that forced white backgrounds and black text on autofilled inputs, implementing custom :-webkit-autofill pseudo-class overrides to maintain the luxury dark theme.
-4.	State Persistence vs. Security: Balanced the need for persistent user sessions with security best practices by utilizing Zustand for client-side state while keeping sensitive JWTs strictly in HttpOnly cookies.
+**Sebit Samir**
 
-
-License
-This project is licensed under the MIT License.
-
-Author:
-Sebit Samir
-
-[Your LinkedIn URL] | https//:sebitsamir.vercel.app | sebitsamir@gmail.com
-
+GitHub: [@sebitsamir](https://github.com/sebitsamir)
