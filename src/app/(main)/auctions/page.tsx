@@ -1,23 +1,58 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react"; 
 
-import { IAuction } from "@/types";
-import { auctionService } from "@/services/auctionService"; 
+import type { IAuction } from "@/types";
+import type { AuctionFilters as ApiAuctionFilters } from "@/services/auctionService";
+
+import { auctionService } from "@/services/auctionService";
+
 import { AuctionFilters } from "@/components/auction/AuctionFilters";
-import { AuctionGrid } from "@/components/auction/AuctionGrid"; 
-import { useDebounce } from "@/hooks/useDebounce";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { AuctionGrid } from "@/components/auction/AuctionGrid";
 import { PageTransition } from "@/components/layout/PageTransition";
 
-export default function AuctionsPage() {
-    // Next.js requires useSearchParams to be wrapped in Suspense
+import { useDebounce } from "@/hooks/useDebounce";
+import { usePageTitle } from "@/hooks/usePageTitle";
+
+type SortOption =
+    | "endingSoon"
+    | "priceLow"
+    | "priceHigh"
+    | "newest";
+
+interface FilterValues {
+    search: string;
+    category: string;
+    minPrice: string;
+    maxPrice: string;
+    sortBy: SortOption;
+}
+
+function isSortOption(value: string | null): value is SortOption {
     return (
-        <Suspense fallback={<PageTransition><div className="h-screen" /></PageTransition>}>
+        value === "endingSoon" ||
+        value === "priceLow" ||
+        value === "priceHigh" ||
+        value === "newest"
+    );
+}
+
+export default function AuctionsPage() {
+    return (
+        <Suspense fallback={<AuctionsPageSkeleton />}>
             <AuctionsPageContent />
         </Suspense>
+    );
+}
+
+function AuctionsPageSkeleton() {
+    return (
+        <PageTransition>
+            <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
+                <div className="min-h-[60vh]" />
+            </div>
+        </PageTransition>
     );
 }
 
@@ -25,100 +60,279 @@ function AuctionsPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    // 1. Hydrate from URL so shared links work (Phase 2/6 polish)
-    const [filters, setFilters] = useState({
-        search: searchParams.get("q") || "",
-        category: searchParams.get("category") || "all",
-        minPrice: "",
-        maxPrice: "",
-        sortBy: (searchParams.get("sortBy") as any) || "newest",
-    });
-
-    const [auctions, setAuctions] = useState<IAuction[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    const debouncedSearch = useDebounce(filters.search, 500);
-
     usePageTitle("Auctions — LastCall");
 
+    /*
+     * URL is the source of truth.
+     *
+     * This removes the old:
+     * URL -> state effect
+     * state -> URL effect
+     *
+     * which could fight each other.
+     */
+    const search = searchParams.get("q") ?? "";
+    const category = searchParams.get("category") ?? "all";
+    const minPrice = searchParams.get("minPrice") ?? "";
+    const maxPrice = searchParams.get("maxPrice") ?? "";
+
+    const sortParam = searchParams.get("sortBy");
+
+    const sortBy: SortOption = isSortOption(sortParam)
+        ? sortParam
+        : "newest";
+
+    const filters: FilterValues = {
+        search,
+        category,
+        minPrice,
+        maxPrice,
+        sortBy,
+    };
+
+    /*
+     * We only debounce the API search.
+     *
+     * The URL/input can update immediately,
+     * while the backend request waits briefly.
+     */
+    const debouncedSearch = useDebounce(search, 500);
+
+    const [auctions, setAuctions] = useState<IAuction[] | null>(
+        null
+    );
+
+    /*
+     * Fetch auctions.
+     *
+     * Notice:
+     * - no synchronous setIsLoading(true)
+     * - no URL mutation here
+     * - no filter-state mutation here
+     */
     useEffect(() => {
-        const fetchAuctions = async () => {
-            setIsLoading(true);
+        let cancelled = false;
+
+        async function loadAuctions() {
+            const parsedMinPrice =
+                minPrice.trim() !== ""
+                    ? Number(minPrice)
+                    : undefined;
+
+            const parsedMaxPrice =
+                maxPrice.trim() !== ""
+                    ? Number(maxPrice)
+                    : undefined;
+
+            const apiFilters: ApiAuctionFilters = {
+                search:
+                    debouncedSearch.trim() !== ""
+                        ? debouncedSearch.trim()
+                        : undefined,
+
+                category:
+                    category !== "all"
+                        ? category
+                        : undefined,
+
+                sortBy,
+
+                minPrice:
+                    parsedMinPrice !== undefined &&
+                    Number.isFinite(parsedMinPrice)
+                        ? parsedMinPrice
+                        : undefined,
+
+                maxPrice:
+                    parsedMaxPrice !== undefined &&
+                    Number.isFinite(parsedMaxPrice)
+                        ? parsedMaxPrice
+                        : undefined,
+            };
+
             try {
-                const apiFilters = {
-                    category: filters.category !== "all" ? filters.category : undefined,
-                    sortBy: filters.sortBy,
-                    search: debouncedSearch || undefined,
-                    minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
-                    maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
-                };
-                const data = await auctionService.getActiveAuctions(apiFilters);
-                setAuctions(Array.isArray(data) ? data : []);
+                const data =
+                    await auctionService.getActiveAuctions(
+                        apiFilters
+                    );
+
+                if (!cancelled) {
+                    setAuctions(data);
+                }
             } catch (error) {
-                setAuctions([]);
-            } finally {
-                setIsLoading(false);
+                console.error(
+                    "Failed to load auctions:",
+                    error
+                );
+
+                if (!cancelled) {
+                    setAuctions([]);
+                }
             }
+        }
+
+        void loadAuctions();
+
+        return () => {
+            cancelled = true;
         };
-        fetchAuctions();
-    }, [debouncedSearch, filters.category, filters.sortBy, filters.minPrice, filters.maxPrice]);
+    }, [
+        debouncedSearch,
+        category,
+        minPrice,
+        maxPrice,
+        sortBy,
+    ]);
 
-    useEffect(() => {
-        const params = new URLSearchParams();
-        if (filters.category !== "all") params.set("category", filters.category);
-        if (debouncedSearch) params.set("q", debouncedSearch);
-        if (filters.sortBy !== "newest") params.set("sortBy", filters.sortBy);
+    /*
+     * Changes a single URL filter.
+     *
+     * There is no local filter state anymore.
+     */
+    const handleFilterChange = (
+        key: string,
+        value: string
+    ) => {
+        const params = new URLSearchParams(
+            searchParams.toString()
+        );
 
-        router.replace(`/auctions${params.toString() ? `?${params}` : ""}`, { scroll: false });
-    }, [filters.category, debouncedSearch, filters.sortBy, router]);
+        const normalizedValue = value.trim();
 
-    const handleFilterChange = (key: string, value: string) => {
-        setFilters((prev) => ({ ...prev, [key]: value }));
+        switch (key) {
+            case "search": {
+                if (normalizedValue) {
+                    params.set("q", value);
+                } else {
+                    params.delete("q");
+                }
+
+                break;
+            }
+
+            case "category": {
+                if (
+                    normalizedValue &&
+                    normalizedValue !== "all"
+                ) {
+                    params.set(
+                        "category",
+                        normalizedValue
+                    );
+                } else {
+                    params.delete("category");
+                }
+
+                break;
+            }
+
+            case "minPrice": {
+                if (normalizedValue) {
+                    params.set(
+                        "minPrice",
+                        normalizedValue
+                    );
+                } else {
+                    params.delete("minPrice");
+                }
+
+                break;
+            }
+
+            case "maxPrice": {
+                if (normalizedValue) {
+                    params.set(
+                        "maxPrice",
+                        normalizedValue
+                    );
+                } else {
+                    params.delete("maxPrice");
+                }
+
+                break;
+            }
+
+            case "sortBy": {
+                if (
+                    isSortOption(normalizedValue) &&
+                    normalizedValue !== "newest"
+                ) {
+                    params.set(
+                        "sortBy",
+                        normalizedValue
+                    );
+                } else {
+                    params.delete("sortBy");
+                }
+
+                break;
+            }
+
+            default: {
+                return;
+            }
+        }
+
+        const queryString = params.toString();
+
+        router.replace(
+            queryString
+                ? `/auctions?${queryString}`
+                : "/auctions",
+            {
+                scroll: false,
+            }
+        );
     };
 
     const clearFilters = () => {
-        setFilters({ search: "", category: "all", minPrice: "", maxPrice: "", sortBy: "newest" });
+        router.replace("/auctions", {
+            scroll: false,
+        });
     };
 
     return (
-        // PageTransition wraps the entire page for smooth route changes
         <PageTransition>
-            <div className="mx-auto max-w-7xl px-4 py-10 md:px-8 space-y-10">
-                {/* Header - Clean, editorial, no fluff */}
+            <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 md:px-8">
                 <div className="space-y-3">
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-medium">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-primary">
                         Live Marketplace
                     </p>
-                    <h1 className="font-serif text-4xl md:text-5xl font-semibold text-foreground leading-tight">
+
+                    <h1 className="font-serif text-4xl font-semibold leading-tight text-foreground md:text-5xl">
                         Curated Auctions
                     </h1>
-                    <p className="text-muted-foreground max-w-2xl text-base leading-relaxed">
-                        Discover exceptional pieces and place your bid in real-time.
-                        Every item is verified and authenticated.
+
+                    <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
+                        Discover exceptional pieces and place
+                        your bid in real-time. Every item is
+                        verified and authenticated.
                     </p>
                 </div>
 
                 <div className="grid gap-10 lg:grid-cols-4">
-                    {/* Filters Sidebar */}
                     <aside className="lg:col-span-1">
-                        <div className="border border-border bg-card sticky top-24 rounded-sm">
+                        <div className="sticky top-24 rounded-sm border border-border bg-card">
                             <div className="p-6">
                                 <AuctionFilters
                                     filters={filters}
-                                    onFilterChange={handleFilterChange}
+                                    onFilterChange={
+                                        handleFilterChange
+                                    }
                                     onClear={clearFilters}
                                 />
                             </div>
                         </div>
                     </aside>
 
-                    {/* Main Grid - Replaced manual loading/empty states with premium AuctionGrid */}
                     <main className="lg:col-span-3">
                         <AuctionGrid
-                            auctions={auctions}
-                            loading={isLoading}
+                            auctions={auctions ?? []}
+                            loading={auctions === null}
                             skeletonCount={6}
-                            onClearFilters={clearFilters}
+                            onClearFilters={
+                                clearFilters
+                            }
                         />
                     </main>
                 </div>

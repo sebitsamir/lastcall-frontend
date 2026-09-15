@@ -2,7 +2,7 @@
 /**
  * ────────────────────────────────────────────────────────────────────────────
  * SELLER LOT ROW
- * A single row in the seller's management table. 
+ * A single row in the seller's management table.
  * Actions are strictly gated by the lot's state:
  *   - Upcoming: View, Edit, Cancel
  *   - Active:   View, Cancel (Edit is locked to protect bidders)
@@ -20,6 +20,7 @@ import { StatusBadge } from "@/components/auction/StatusBadge";
 import { CountdownTimer } from "@/components/auction/CountdownTimer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AuctionImage } from "@/components/auction/AuctionImage";
 
 interface SellerLotRowProps {
     auction: IAuction;
@@ -46,12 +47,20 @@ export function SellerLotRow({
                 href={`/auctions/${auction._id}`}
                 className="flex min-w-0 flex-1 items-center gap-4"
             >
-                <div className="h-14 w-14 shrink-0 overflow-hidden border border-border bg-secondary">
-                    {auction.images?.[0] ? (
-                        <img src={auction.images[0]} alt="" loading="lazy" className="h-full w-full object-cover" />
-                    ) : (
-                        <div className="h-full w-full" aria-hidden />
-                    )}
+                <div
+                    className="
+                    relative h-14 w-14 shrink-0
+                    overflow-hidden
+                    border border-border
+                    bg-secondary
+                "
+                >
+                    <AuctionImage
+                        src={auction.images?.[0]}
+                        alt=""
+                        sizes="56px"
+                        fallback="compact"
+                    />
                 </div>
 
                 <div className="min-w-0">
@@ -78,7 +87,9 @@ export function SellerLotRow({
 
             {/* ── Current Bid (The number that matters) ── */}
             <div className="hidden w-24 shrink-0 text-right md:block">
-                <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Current</p>
+                <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+                    Current
+                </p>
                 <p className="text-sm font-medium tabular-nums text-primary">
                     {formatMoney(auction.currentBid ?? auction.startingPrice ?? 0)}
                 </p>
@@ -112,7 +123,8 @@ export function SellerLotRow({
                     aria-label="Cancel lot"
                     className={cn(
                         "text-muted-foreground hover:text-destructive",
-                        !canCancel && "opacity-30 cursor-not-allowed hover:text-muted-foreground"
+                        !canCancel &&
+                        "opacity-30 cursor-not-allowed hover:text-muted-foreground",
                     )}
                 >
                     <X className="h-4 w-4" strokeWidth={1.5} />

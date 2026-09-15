@@ -1,71 +1,109 @@
-/**
- * AUCTION GALLERY
- * Editorial photography first: one large plate, a hairline thumbnail rail.
- * No carousel library — state is a single index, motion is a quiet crossfade.
- * Thumbnails are real <button>s: keyboard-accessible for free.
- */
 "use client";
 
 import { useState } from "react";
+
 import { cn } from "@/lib/utils";
+import { AuctionImage } from "@/components/auction/AuctionImage";
 
 interface AuctionGalleryProps {
     images: string[];
-    title: string; // Used for alt text — accessibility is not optional.
+    title: string;
 }
 
-export function AuctionGallery({ images, title }: AuctionGalleryProps) {
-    // Single source of truth for the visible plate.
-    const [active, setActive] = useState(0);
+export function AuctionGallery({
+    images,
+    title,
+}: AuctionGalleryProps) {
+    const [active, setActive] =
+        useState(0);
 
-    // Defensive: an auction may legally have zero images.
-    if (images.length === 0) {
+    const cleanImages = images
+        .filter(
+            (image): image is string =>
+                typeof image === "string"
+        )
+        .map((image) => image.trim())
+        .filter(Boolean);
+
+    if (cleanImages.length === 0) {
         return (
-            <div className="flex aspect-[4/3] items-center justify-center border border-border bg-secondary font-serif text-lg text-muted-foreground/40">
+            <div
+                className="
+                    relative flex aspect-[4/3]
+                    items-center justify-center
+                    border border-border
+                    bg-secondary
+                    font-serif text-lg
+                    text-muted-foreground/40
+                "
+            >
                 No image available
             </div>
         );
     }
 
-    const safeActive = Math.min(active, images.length - 1);
+    const safeActive = Math.min(
+        active,
+        cleanImages.length - 1
+    );
 
     return (
         <div className="space-y-2">
-            {/* ── Primary plate: generous, sharp, unhurried ── */}
-            <div className="relative aspect-[4/3] overflow-hidden border border-border bg-secondary">
-                <img
-                    key={safeActive} // Key change remounts → clean crossfade per plate
-                    src={images[safeActive]}
-                    alt={`${title} — image ${safeActive + 1} of ${images.length}`}
-                    loading="eager" // Flagship page: the hero image is the LCP element.
-                    className="h-full w-full object-cover"
+            <div
+                className="
+                    relative aspect-[4/3]
+                    overflow-hidden
+                    border border-border
+                    bg-secondary
+                "
+            >
+                <AuctionImage
+                    src={cleanImages[safeActive]}
+                    alt={`${title} — image ${
+                        safeActive + 1
+                    } of ${cleanImages.length}`}
+                    eager={safeActive === 0}
+                    sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                 />
             </div>
 
-            {/* ── Thumbnail rail: only rendered when there is a choice to make ── */}
-            {images.length > 1 && (
+            {cleanImages.length > 1 && (
                 <div className="grid grid-cols-5 gap-2">
-                    {images.map((src, i) => (
-                        <button
-                            key={src}
-                            onClick={() => setActive(i)}
-                            aria-label={`View image ${i + 1}`}
-                            aria-current={i === safeActive}
-                            className={cn(
-                                "aspect-square overflow-hidden border transition-colors",
-                                i === safeActive
-                                    ? "border-primary"          // Gold = "you are here"
-                                    : "border-border hover:border-muted-foreground/50"
-                            )}
-                        >
-                            <img
-                                src={src}
-                                alt="" // Decorative; the button carries the label.
-                                loading="lazy"
-                                className="h-full w-full object-cover"
-                            />
-                        </button>
-                    ))}
+                    {cleanImages.map(
+                        (src, index) => (
+                            <button
+                                key={`${src}-${index}`}
+                                type="button"
+                                onClick={() =>
+                                    setActive(index)
+                                }
+                                aria-label={`View image ${
+                                    index + 1
+                                }`}
+                                aria-current={
+                                    index ===
+                                    safeActive
+                                }
+                                className={cn(
+                                    "relative aspect-square",
+                                    "overflow-hidden border",
+                                    "bg-secondary",
+                                    "transition-colors",
+                                    index ===
+                                        safeActive
+                                        ? "border-primary"
+                                        : "border-border hover:border-muted-foreground/50"
+                                )}
+                            >
+                                <AuctionImage
+                                    src={src}
+                                    alt=""
+                                    sizes="120px"
+                                    fallback="compact"
+                                />
+                            </button>
+                        )
+                    )}
                 </div>
             )}
         </div>

@@ -17,6 +17,7 @@ import type { WatchState } from "@/lib/watchlist/state";
 import { formatMoney, lotNumber } from "@/lib/formatting/format";
 import { Badge } from "@/components/ui/badge";
 import { CountdownTimer } from "@/components/auction/CountdownTimer";
+import { AuctionImage } from "@/components/auction/AuctionImage";
 
 /** State → badge voice. One map; the row never decides colors itself. */
 const STATE_BADGE: Record<WatchState, { label: string; variant: "success" | "cancelled" | "live" | "neutral" | "ended"; dot?: boolean }> = {
@@ -46,12 +47,20 @@ export function WatchListRow({ auction, state, busy, onUnwatch }: WatchlistRowPr
                 className="flex min-w-0 flex-1 items-center gap-4"
                 aria-label={`View lot: ${auction.title}`}
             >
-                <div className="h-14 w-14 shrink-0 overflow-hidden border border-border bg-secondary">
-                    {auction.images?.[0] ? (
-                        <img src={auction.images[0]} alt="" loading="lazy" className="h-full w-full object-cover" />
-                    ) : (
-                        <div className="h-full w-full" aria-hidden />
-                    )}
+                <div
+                    className="
+                    relative h-14 w-14 shrink-0
+                    overflow-hidden
+                    border border-border
+                    bg-secondary
+                    "
+                >
+                    <AuctionImage
+                        src={auction.images?.[0]}
+                        alt=""
+                        sizes="56px"
+                        fallback="compact"
+                    />
                 </div>
 
                 <div className="min-w-0">
