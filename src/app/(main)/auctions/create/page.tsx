@@ -20,6 +20,7 @@ import { useAuthStore } from "@/store/authStore";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/select";
 import { Field } from "@/components/ui/field";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -202,7 +203,7 @@ function Wizard() {
 
     /* ── Render ──────────────────────────────────────────────────────────── */
     return (
-        <div className="mx-auto w-full max-w-3xl space-y-10 px-4 py-10 md:px-8">
+        <div className="mx-auto w-full max-w-3xl space-y-10 px-[clamp(16px,3vw,32px)] py-7">
             <SectionHeading
                 overline={editId ? "Revise your lot" : "Consign to the house"}
                 title={editId ? "Edit Auction" : "Sell an Item"}
@@ -215,7 +216,7 @@ function Wizard() {
                 onStepClick={setStep}
             />
 
-            <div className="space-y-6 border border-border bg-card p-6">
+            <div className="space-y-6 rounded-panel border border-border bg-card p-[clamp(18px,2.5vw,28px)]">
                 {step === 0 && <StepItem draft={draft} errors={errors} patch={patch} />}
                 {step === 1 && (
                     <div className="space-y-2">
@@ -266,17 +267,16 @@ function StepItem({ draft, errors, patch }: StepProps) {
             </Field>
 
             <Field label="Category" htmlFor="category" error={errors.category}>
-                <select
+                <NativeSelect
                     id="category"
                     value={draft.category}
                     onChange={(e) => patch({ category: e.target.value })}
-                    className="h-10 w-full rounded-sm border border-border bg-secondary/60 px-3 text-sm text-foreground focus-visible:border-primary/50 focus-visible:outline-none"
                 >
                     <option value="">Select a category</option>
                     {AUCTION_CATEGORIES.map((c) => (
                         <option key={c} value={c}>{c}</option>
                     ))}
-                </select>
+                </NativeSelect>
             </Field>
 
             <Field label="Description" htmlFor="description" error={errors.description} hint="Provenance, condition, story">
@@ -285,7 +285,7 @@ function StepItem({ draft, errors, patch }: StepProps) {
                     value={draft.description}
                     onChange={(e) => patch({ description: e.target.value })}
                     rows={5}
-                    className="w-full rounded-sm border border-border bg-secondary/60 px-3 py-2 text-sm text-foreground focus-visible:border-primary/50 focus-visible:outline-none"
+                    className="w-full rounded-field border border-border bg-secondary px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus-visible:border-primary-text focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/12"
                 />
             </Field>
         </div>
@@ -332,7 +332,7 @@ function Review({ draft, onEdit }: { draft: Draft; onEdit: (step: number) => voi
     return (
         <div className="space-y-6">
             <ReviewRow label="Item" onEdit={() => onEdit(0)}>
-                <p className="font-serif text-lg text-foreground">{draft.title}</p>
+                <p className="text-lg text-foreground">{draft.title}</p>
                 <p className="text-xs text-muted-foreground">{draft.category}</p>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{draft.description}</p>
             </ReviewRow>
@@ -340,13 +340,13 @@ function Review({ draft, onEdit }: { draft: Draft; onEdit: (step: number) => voi
             <ReviewRow label="Images" onEdit={() => onEdit(1)}>
                 <div className="flex gap-2">
                     {draft.images.map((url, i) => (
-                        <img key={url} src={url} alt={`Lot image ${i + 1}`} className="h-14 w-14 border border-border object-cover" />
+                        <img key={url} src={url} alt={`Lot image ${i + 1}`} className="h-14 w-14 rounded-xl border border-border object-cover" />
                     ))}
                 </div>
             </ReviewRow>
 
             <ReviewRow label="Details" onEdit={() => onEdit(2)}>
-                <p className="text-sm tabular-nums text-primary">{formatMoney(Number(draft.startingPrice) || 0)} starting</p>
+                <p className="text-sm tabular-nums text-primary-text">{formatMoney(Number(draft.startingPrice) || 0)} starting</p>
             </ReviewRow>
 
             <ReviewRow label="Schedule" onEdit={() => onEdit(3)}>
@@ -367,8 +367,8 @@ function ReviewRow({ label, onEdit, children }: { label: string; onEdit: () => v
     return (
         <div className="space-y-2">
             <div className="flex items-center justify-between">
-                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
-                <button type="button" onClick={onEdit} className="text-xs font-medium text-primary underline-offset-4 hover:underline">
+                <p className="text-[13px] font-semibold text-muted-foreground">{label}</p>
+                <button type="button" onClick={onEdit} className="text-xs font-medium text-primary-text underline-offset-4 hover:underline">
                     Edit
                 </button>
             </div>
@@ -388,7 +388,7 @@ function toLocalInput(iso: string): string {
 
 function WizardSkeleton() {
     return (
-        <div className="mx-auto w-full max-w-3xl space-y-10 px-4 py-10 md:px-8">
+        <div className="mx-auto w-full max-w-3xl space-y-10 px-[clamp(16px,3vw,32px)] py-7">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-6 w-full" />
             <Skeleton className="h-64 w-full" />

@@ -1,8 +1,8 @@
 /**
  * BID HISTORY
- * A quiet vertical activity line. Most recent first — the number that
- * matters (the latest bid) is the one you see without scrolling.
- * "You" rows are highlighted in gold: your position must be unmistakable.
+ * A quiet activity feed. Most recent first — the number that matters (the
+ * latest bid) is the one you see without scrolling. "You" rows are tinted
+ * green: your position must be unmistakable.
  */
 import { bidDisplayName, type BidRecord } from "@/lib/api/bids";
 import { formatMoney, timeAgo } from "@/lib/formatting/format";
@@ -13,6 +13,12 @@ interface BidHistoryProps {
     currentUserId?: string; // From the auth store; enables "You" detection.
 }
 
+/** Two-letter monogram for the avatar bubble. */
+function monogram(name: string, isYou: boolean): string {
+    if (isYou) return "YOU";
+    return name.replace("@", "").slice(0, 2).toUpperCase();
+}
+
 export function BidHistory({ bids, currentUserId }: BidHistoryProps) {
     // Newest first; never mutate the prop — sort a copy.
     const ordered = [...bids].sort(
@@ -21,59 +27,52 @@ export function BidHistory({ bids, currentUserId }: BidHistoryProps) {
 
     if (ordered.length === 0) {
         return (
-            <p className="border border-dashed border-border bg-card/40 px-4 py-6 text-center text-sm text-muted-foreground">
+            <p className="rounded-card border border-dashed border-border-strong px-4 py-8 text-center text-sm text-muted-foreground">
                 No bids yet. The floor is yours.
             </p>
         );
     }
 
     return (
-        <ol className="space-y-0">
+        <ol>
             {ordered.map((bid, index) => {
                 const isYou =
                     typeof bid.bidder === "object" && bid.bidder?._id === currentUserId;
+                const name = isYou ? "You" : bidDisplayName(bid);
 
                 return (
                     <li
                         key={bid._id}
                         className={cn(
-                            "relative flex items-baseline justify-between gap-4 py-3 pl-6",
-                            // Hairline separators between rows, not boxes around them.
-                            index !== ordered.length - 1 && "border-b border-border"
+                            "flex items-center gap-3.5 py-3 text-sm",
+                            index !== 0 && "border-t border-border"
                         )}
                     >
-                        {/* The vertical activity line + node */}
                         <span
                             className={cn(
-                                "absolute left-1 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full",
-                                index === 0 ? "bg-primary" : "bg-border" // Latest bid glows gold
+                                "grid h-10 w-10 flex-none place-items-center rounded-full text-xs font-bold",
+                                isYou ? "bg-success/15 text-success" : "bg-surface-3 text-foreground"
                             )}
-                            aria-hidden
-                        />
+                            aria-hidden="true"
+                        >
+                            {monogram(name, isYou)}
+                        </span>
 
-                        {/* Amount: tabular, precise; latest bid in gold */}
-                        <span
+                        <p className="min-w-0 flex-1 text-muted-foreground">
+                            <b className="truncate font-semibold text-foreground">{name}</b>
+                            {index === 0 && " · highest bid"}
+                            <br />
+                            <small className="text-xs tabular-nums">{timeAgo(bid.createdAt)}</small>
+                        </p>
+
+                        <b
                             className={cn(
-                                "text-sm font-medium tabular-nums",
-                                index === 0 ? "text-primary" : "text-foreground"
+                                "shrink-0 font-semibold tabular-nums",
+                                index === 0 ? "text-primary-text" : "text-foreground"
                             )}
                         >
                             {formatMoney(bid.amount)}
-                        </span>
-
-                        {/* Bidder identity */}
-                        <span className="flex-1 truncate text-sm text-muted-foreground">
-                            {isYou ? (
-                                <span className="text-primary">You</span>
-                            ) : (
-                                bidDisplayName(bid)
-                            )}
-                        </span>
-
-                        {/* Recency: quiet, right-aligned */}
-                        <span className="shrink-0 text-xs tabular-nums text-muted-foreground/70">
-                            {timeAgo(bid.createdAt)}
-                        </span>
+                        </b>
                     </li>
                 );
             })}

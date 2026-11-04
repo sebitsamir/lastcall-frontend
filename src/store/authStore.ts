@@ -20,7 +20,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Initial State
     user: null,
     isAuthenticated: false,
-    isLoading: true,
+    isLoading: false,
 
     // Action: Called when a user successfully logs in or register
     setAuth: (user) => set({

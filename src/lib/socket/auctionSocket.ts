@@ -11,30 +11,33 @@ import {
     SOCKET_EVENTS,
     type NewBidPayload,
     type OutbidPayload,
+    type AuctionEndedPayload,
 } from "./events";
 
 interface SubscribeOptions {
     auctionId: string;
     onNewBid?: (payload: NewBidPayload) => void;
     onOutbid?: (payload: OutbidPayload) => void;
+    onAuctionEnded?: (payload: AuctionEndedPayload) => void;
 }
 
 export function subscribeToAuction({
     auctionId,
     onNewBid,
     onOutbid,
+    onAuctionEnded,
 }: SubscribeOptions): () => void {
     const socket = getSocket();
 
-    // Join the server-side room; broadcasts for this auction now reach us.
     socket.emit(SOCKET_EVENTS.joinAuction, auctionId);
 
     if (onNewBid) socket.on(SOCKET_EVENTS.newBid, onNewBid);
     if (onOutbid) socket.on(SOCKET_EVENTS.outbid, onOutbid);
+    if (onAuctionEnded) socket.on(SOCKET_EVENTS.auctionEnded, onAuctionEnded);
 
-    // Cleanup: unsubscribe exactly what we registered. Nothing more.
     return () => {
         if (onNewBid) socket.off(SOCKET_EVENTS.newBid, onNewBid);
         if (onOutbid) socket.off(SOCKET_EVENTS.outbid, onOutbid);
+        if (onAuctionEnded) socket.off(SOCKET_EVENTS.auctionEnded, onAuctionEnded);
     };
 }

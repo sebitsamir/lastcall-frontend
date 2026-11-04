@@ -61,13 +61,13 @@ export default function WalletPage() {
     };
 
     return (
-        <div className="mx-auto w-full max-w-7xl space-y-10 px-4 py-10 md:px-8">
+        <div className="mx-auto w-full max-w-[1200px] space-y-10 px-[clamp(16px,3vw,32px)] py-7">
             <SectionHeading
                 overline="Funds & ledger"
                 title="Wallet"
                 action={
                     <div>
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                        <p className="text-[13px] text-muted-foreground">
                             Demo credit — no real payment is processed yet.
                         </p>
                         <Button onClick={() => setDialogOpen(true)}>
@@ -79,7 +79,7 @@ export default function WalletPage() {
             />
 
             {/* ── Buying power, stated in three voices ── */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 min-[1100px]:grid-cols-3">
                 <BalanceCard label="Available Balance" value={wallet.available} tone="gold" />
                 <BalanceCard label="Reserved for Bids" value={wallet.frozen} tone="muted" />
                 <BalanceCard label="Total Buying Power" value={wallet.total} />
@@ -87,7 +87,7 @@ export default function WalletPage() {
 
             {/* ── The ledger ── */}
             <section className="space-y-6">
-                <h2 className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                <h2 className="text-xl">
                     Transactions
                 </h2>
 

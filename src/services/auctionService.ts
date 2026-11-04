@@ -8,6 +8,8 @@ export interface AuctionFilters {
     maxPrice?: number;
     sortBy?: "endingSoon" | "priceLow" | "priceHigh" | "newest";
     search?: string;
+    status?: "active" | "upcoming" | "completed" | "cancelled" | "floor";
+    limit?: number;
 }
 
 export const auctionService = {

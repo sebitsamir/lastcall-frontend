@@ -1,155 +1,140 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import type { IAuction } from "@/types";
-
-import {
-    formatMoney,
-    lotNumber,
-} from "@/lib/formatting/format";
+import { cn } from "@/lib/utils";
+import { formatMoney } from "@/lib/formatting/format";
 
 import { StatusBadge } from "@/components/auction/StatusBadge";
 import { CountdownTimer } from "@/components/auction/CountdownTimer";
 import { AuctionImage } from "@/components/auction/AuctionImage";
-import { Button } from "@/components/ui/button";
 
 interface HeroLotProps {
-    auction: IAuction;
+    /** Most urgent live lots; the hero rotates through them. */
+    auctions: IAuction[];
+    className?: string;
 }
 
-export function HeroLot({
-    auction,
-}: HeroLotProps) {
-    const displayBid =
-        auction.currentBid ??
-        auction.startingPrice ??
-        0;
+/** Auto-advance cadence from the design. */
+const ROTATE_MS = 6_500;
+
+export function HeroLot({ auctions, className }: HeroLotProps) {
+    const [index, setIndex] = useState(0);
+    const count = auctions.length;
+
+    useEffect(() => {
+        if (count < 2) return;
+        const id = setInterval(() => {
+            if (!document.hidden) setIndex((i) => i + 1);
+        }, ROTATE_MS);
+        return () => clearInterval(id);
+    }, [count]);
+
+    if (count === 0) return null;
+
+    const active = index % count;
+    const auction = auctions[active];
+    const displayBid = auction.currentBid ?? auction.startingPrice ?? 0;
 
     return (
-        <Link
-            href={`/auctions/${auction._id}`}
-            className="group block"
-            aria-label={`View featured lot: ${auction.title}`}
+        <div
+            className={cn(
+                "relative flex flex-col bg-secondary min-[900px]:block min-[900px]:min-h-[540px]",
+                className
+            )}
         >
-            <article
-                className="
-                    border border-border bg-card
-                    transition-colors duration-300
-                    group-hover:border-primary/40
-                "
-            >
-                <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
-                    <AuctionImage
-                        src={auction.images?.[0]}
-                        alt={auction.title}
-                        eager
-                        sizes="(min-width: 1280px) 50vw, (min-width: 1024px) 48vw, 100vw"
-                        className="transition-transform duration-700 ease-out group-hover:scale-[1.02]"
-                    />
+            <div className="relative h-[240px] overflow-hidden min-[481px]:h-[clamp(230px,48vw,360px)] min-[900px]:absolute min-[900px]:inset-0 min-[900px]:h-auto">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={auction._id}
+                        className="absolute inset-0"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.55, ease: [0.2, 0.7, 0.2, 1] }}
+                    >
+                        <AuctionImage
+                            src={auction.images?.[0]}
+                            alt={auction.title}
+                            eager
+                            sizes="(min-width: 900px) 50vw, 100vw"
+                            className="animate-ken-burns"
+                        />
+                        <div
+                            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent"
+                            aria-hidden="true"
+                        />
+                    </motion.div>
+                </AnimatePresence>
+            </div>
 
-                    <div className="absolute left-4 top-4 z-10">
+            {count > 1 && (
+                <div className="absolute right-2.5 top-3.5 z-10 flex gap-1.5 min-[900px]:right-5 min-[900px]:top-5">
+                    {auctions.map((item, i) => (
+                        <button
+                            key={item._id}
+                            type="button"
+                            onClick={() => setIndex(i)}
+                            aria-label={`Featured lot ${i + 1}`}
+                            aria-current={i === active}
+                            className="grid h-11 w-9 place-items-center min-[900px]:h-7 min-[900px]:w-7"
+                        >
+                            <span
+                                className={cn(
+                                    "relative h-2 overflow-hidden rounded-full bg-white/40 transition-all duration-300",
+                                    i === active ? "w-[22px]" : "w-2"
+                                )}
+                            >
+                                {i === active && (
+                                    <span
+                                        key={index}
+                                        className="animate-hero-progress absolute inset-y-0 left-0 rounded-full bg-white"
+                                        style={{ animationDuration: `${ROTATE_MS}ms` }}
+                                    />
+                                )}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            <Link
+                href={`/auctions/${auction._id}`}
+                aria-label={`View featured lot: ${auction.title}`}
+                className="relative z-[2] m-4 block rounded-card border border-border bg-card/92 px-[18px] py-4 shadow-lift backdrop-blur-md min-[900px]:absolute min-[900px]:bottom-5 min-[900px]:left-5 min-[900px]:m-0 min-[900px]:w-[min(340px,calc(100%-40px))]"
+            >
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={auction._id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.35, ease: [0.2, 0.7, 0.2, 1] }}
+                        className="grid gap-2.5"
+                    >
                         <StatusBadge
                             status={auction.status}
+                            startTime={auction.startTime}
+                            endTime={auction.endTime}
                             dot
+                            className="w-fit"
                         />
-                    </div>
-                </div>
-
-                <div className="space-y-4 p-6">
-                    <div
-                        className="
-                            flex items-center justify-between
-                            text-[10px] uppercase
-                            tracking-[0.2em]
-                            text-muted-foreground
-                        "
-                    >
-                        <span>
-                            Lot {lotNumber(auction._id)}
-                        </span>
-
-                        <span>
-                            {auction.category}
-                        </span>
-                    </div>
-
-                    <h3
-                        className="
-                            font-serif text-2xl
-                            leading-tight text-foreground
-                            transition-colors
-                            group-hover:text-primary
-                        "
-                    >
-                        {auction.title}
-                    </h3>
-
-                    <div
-                        className="
-                            flex items-end justify-between
-                            border-t border-border pt-4
-                        "
-                    >
-                        <div>
-                            <p
-                                className="
-                                    text-[10px] uppercase
-                                    tracking-[0.2em]
-                                    text-muted-foreground
-                                "
-                            >
-                                Current Bid
-                            </p>
-
-                            <p
-                                className="
-                                    text-3xl font-medium
-                                    tabular-nums text-primary
-                                "
-                            >
-                                {formatMoney(displayBid)}
-                            </p>
+                        <b className="line-clamp-2 text-base font-semibold">{auction.title}</b>
+                        <div className="flex items-end justify-between">
+                            <div>
+                                <span className="block text-xs font-medium text-muted-foreground">Current bid</span>
+                                <b className="block text-2xl font-[650] tracking-[-0.02em] tabular-nums text-primary-text">
+                                    {formatMoney(displayBid)}
+                                </b>
+                            </div>
+                            <CountdownTimer startTime={auction.startTime} endTime={auction.endTime} icon className="text-sm" />
                         </div>
-
-                        <div className="text-right">
-                            <p
-                                className="
-                                    text-[10px] uppercase
-                                    tracking-[0.2em]
-                                    text-muted-foreground
-                                "
-                            >
-                                Ends In
-                            </p>
-
-                            <CountdownTimer
-                                endTime={auction.endTime}
-                                className="text-lg"
-                            />
-                        </div>
-                    </div>
-
-                    <Button
-                        variant="outline"
-                        className="w-full"
-                        asChild
-                    >
-                        <span>
-                            View Lot
-
-                            <ArrowUpRight
-                                className="
-                                    h-3.5 w-3.5
-                                    transition-transform
-                                    group-hover:translate-x-0.5
-                                    group-hover:-translate-y-0.5
-                                "
-                                strokeWidth={1.5}
-                            />
-                        </span>
-                    </Button>
-                </div>
-            </article>
-        </Link>
+                    </motion.div>
+                </AnimatePresence>
+            </Link>
+        </div>
     );
 }

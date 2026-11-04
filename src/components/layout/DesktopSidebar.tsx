@@ -4,9 +4,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, User, Wallet, Gavel, Package, Settings, LogOut } from "lucide-react";
-import { useLogout } from "@/hooks/useLogout"; 
+import { useLogout } from "@/hooks/useLogout";
+import { cn } from "@/lib/utils";
 
-const links = [
+export const ACCOUNT_LINKS = [
     { href: "/account", label: "Dashboard", icon: LayoutDashboard },
     { href: "/account/profile", label: "Profile", icon: User },
     { href: "/account/wallet", label: "Wallet", icon: Wallet },
@@ -20,37 +21,38 @@ export function DesktopSidebar() {
     const handleLogout = useLogout(); // Secure logout (kills socket + cookies + store)
 
     return (
-        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-64 flex-col border-r border-border bg-background md:flex">
-            <nav className="flex-1 space-y-1 px-4 py-8">
-                <p className="mb-4 px-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                    Account
-                </p>
-                {links.map((link) => {
-                    // Now this will actually work because the spaces are gone!
+        <aside className="sticky top-28 hidden w-60 shrink-0 self-start py-10 pl-[clamp(16px,3vw,32px)] pr-4 md:block lg:top-24">
+            <nav aria-label="Account" className="space-y-1">
+                <p className="mb-3 px-4 text-xs font-semibold text-muted-foreground">Account</p>
+
+                {ACCOUNT_LINKS.map((link) => {
                     const isActive = pathname === link.href;
                     return (
                         <Link
                             key={link.href}
                             href={link.href}
-                            className={`flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors ${isActive
-                                    ? "border-primary bg-white/5 text-foreground"
-                                    : "border-transparent text-muted-foreground hover:bg-white/5 hover:text-foreground"
-                                }`}
+                            aria-current={isActive ? "page" : undefined}
+                            className={cn(
+                                "flex h-11 items-center gap-3 rounded-full px-4 text-sm font-medium transition-colors",
+                                isActive
+                                    ? "bg-secondary text-foreground"
+                                    : "text-muted-foreground hover:bg-card hover:text-foreground"
+                            )}
                         >
-                            <link.icon className="h-4 w-4" strokeWidth={1.5} />
-                            <span className="tracking-wide">{link.label}</span>
+                            <link.icon className="h-[18px] w-[18px]" strokeWidth={1.7} aria-hidden="true" />
+                            {link.label}
                         </Link>
                     );
                 })}
             </nav>
 
-            <div className="border-t border-border p-4">
+            <div className="mt-6 border-t border-border pt-4">
                 <button
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-3 px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:text-destructive"
+                    className="flex h-11 w-full items-center gap-3 rounded-full px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                 >
-                    <LogOut className="h-4 w-4" strokeWidth={1.5} />
-                    <span className="tracking-wide">Sign Out</span>
+                    <LogOut className="h-[18px] w-[18px]" strokeWidth={1.7} aria-hidden="true" />
+                    Sign Out
                 </button>
             </div>
         </aside>

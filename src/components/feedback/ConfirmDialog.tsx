@@ -53,7 +53,7 @@ export function ConfirmDialog({
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             {/* Solid dim overlay — no glassmorphism */}
-            <div className="absolute inset-0 bg-black/70" onClick={onCancel} aria-hidden />
+            <div className="absolute inset-0 bg-black/60" onClick={onCancel} aria-hidden />
 
             {/* Spring entrance: motion communicates state change, not decoration */}
             <motion.div
@@ -63,9 +63,9 @@ export function ConfirmDialog({
                 initial={{ opacity: 0, scale: 0.96, y: 8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ type: "spring", duration: 0.35, bounce: 0.15 }}
-                className="relative w-full max-w-sm border border-border bg-popover p-6"
+                className="relative w-full max-w-sm rounded-panel border border-border bg-popover p-6 shadow-lift"
             >
-                <h2 className="font-serif text-xl text-foreground">{title}</h2>
+                <h2 className="text-xl text-foreground">{title}</h2>
 
                 {description && (
                     <div className="mt-3 text-sm leading-relaxed text-muted-foreground">

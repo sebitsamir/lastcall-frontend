@@ -51,7 +51,7 @@ export function SellerLotRow({
                     className="
                     relative h-14 w-14 shrink-0
                     overflow-hidden
-                    border border-border
+                    rounded-xl
                     bg-secondary
                 "
                 >
@@ -64,7 +64,7 @@ export function SellerLotRow({
                 </div>
 
                 <div className="min-w-0">
-                    <h3 className="truncate font-serif text-base text-foreground transition-colors hover:text-primary">
+                    <h3 className="truncate text-base text-foreground transition-colors hover:text-primary-text">
                         {auction.title}
                     </h3>
                     <p className="mt-0.5 text-xs text-muted-foreground">
@@ -87,10 +87,10 @@ export function SellerLotRow({
 
             {/* ── Current Bid (The number that matters) ── */}
             <div className="hidden w-24 shrink-0 text-right md:block">
-                <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                     Current
                 </p>
-                <p className="text-sm font-medium tabular-nums text-primary">
+                <p className="text-sm font-medium tabular-nums text-primary-text">
                     {formatMoney(auction.currentBid ?? auction.startingPrice ?? 0)}
                 </p>
             </div>

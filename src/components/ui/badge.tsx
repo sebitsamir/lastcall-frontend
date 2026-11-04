@@ -2,17 +2,27 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
+/**
+ * Status "chips" from the design: pill-shaped, soft tinted fills, no borders.
+ *   live                   → live green (on-air, never money-green)
+ *   gold / upcoming        → brand gold
+ *   success                → financial green (winning, deposits)
+ *   red / cancelled        → danger
+ *   neutral / ended        → quiet
+ */
 const badgeVariants = cva(
-  "inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.15em]",
+  "inline-flex h-6 items-center gap-1.5 rounded-full px-3 text-xs font-semibold whitespace-nowrap",
   {
     variants: {
       variant: {
-        live: "border-primary/40 bg-primary/10 text-primary",
-        upcoming: "border-border bg-secondary text-muted-foreground",
-        ended: "border-border bg-transparent text-muted-foreground",
-        cancelled: "border-destructive/40 bg-destructive/10 text-destructive",
-        success: "border-success/40 bg-success/10 text-success",
-        neutral: "border-border bg-secondary text-secondary-foreground",
+        live: "bg-live/15 text-live",
+        success: "bg-success/15 text-success",
+        gold: "bg-primary/12 text-primary-text",
+        upcoming: "bg-primary/12 text-primary-text",
+        red: "bg-destructive/13 text-destructive",
+        cancelled: "bg-destructive/13 text-destructive",
+        ended: "bg-secondary text-muted-foreground",
+        neutral: "bg-secondary text-muted-foreground",
       },
     },
     defaultVariants: { variant: "neutral" },
@@ -28,7 +38,12 @@ export interface BadgeProps
 function Badge({ className, variant, dot = false, children, ...props }: BadgeProps) {
   return (
     <div className={cn(badgeVariants({ variant }), className)} {...props}>
-      {dot && <span className={cn("h-1 w-1 rounded-full bg-current", variant === "live" && "animate-pulse")} />}
+      {dot && (
+        <span className="relative grid h-[7px] w-[7px] place-items-center" aria-hidden="true">
+          <span className="animate-live-ping absolute inset-0 rounded-full bg-current" />
+          <span className="relative h-[7px] w-[7px] rounded-full bg-current" />
+        </span>
+      )}
       {children}
     </div>
   );

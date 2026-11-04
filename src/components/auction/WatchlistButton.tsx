@@ -32,7 +32,7 @@ export function WatchlistButton({
     const [busy, setBusy] = useState(false);
 
     const toggle = async (e: React.MouseEvent) => {
-        // The button often lives inside a card <Link> — don't navigate on tap.
+        // The button may live inside a card <Link> — don't navigate on tap.
         e.preventDefault();
         e.stopPropagation();
         if (busy) return;
@@ -54,14 +54,15 @@ export function WatchlistButton({
 
     return (
         <motion.button
-            whileTap={{ scale: 0.85 }} // tactile press feedback
+            type="button"
+            whileTap={{ scale: 0.88 }} // tactile press feedback
             onClick={toggle}
             disabled={busy}
             aria-label={watching ? "Remove from watchlist" : "Add to watchlist"}
             aria-pressed={watching}
             className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/80 backdrop-blur-sm transition-colors",
-                watching ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                "flex h-10 w-10 items-center justify-center rounded-full bg-card transition-colors",
+                watching ? "text-destructive" : "text-muted-foreground hover:text-foreground",
                 className
             )}
         >
@@ -72,7 +73,7 @@ export function WatchlistButton({
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
             >
-                <Heart className={cn("h-4 w-4", watching && "fill-current")} strokeWidth={1.5} />
+                <Heart className={cn("h-5 w-5", watching && "fill-current")} strokeWidth={1.7} />
             </motion.span>
         </motion.button>
     );

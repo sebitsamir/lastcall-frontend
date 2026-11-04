@@ -36,10 +36,10 @@ interface TransactionListProps {
 export function TransactionList({ transactions, loading }: TransactionListProps) {
     if (loading) {
         return (
-            <div className="space-y-0 divide-y divide-border border border-border bg-card">
+            <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-card">
                 {Array.from({ length: 4 }, (_, i) => (
                     <div key={i} className="flex items-center gap-4 p-4">
-                        <Skeleton className="h-9 w-9" />
+                        <Skeleton className="h-10 w-10 rounded-full" />
                         <div className="flex-1 space-y-2">
                             <Skeleton className="h-3 w-32" />
                             <Skeleton className="h-3 w-20" />
@@ -61,7 +61,7 @@ export function TransactionList({ transactions, loading }: TransactionListProps)
     }
 
     return (
-        <ol className="divide-y divide-border border border-border bg-card">
+        <ol className="divide-y divide-border overflow-hidden rounded-card border border-border bg-card">
             {transactions.map((tx) => {
                 const meta = META[tx.type] ?? { label: tx.type, icon: Lock, inflow: false };
                 const Icon = meta.icon;
@@ -69,8 +69,8 @@ export function TransactionList({ transactions, loading }: TransactionListProps)
                 return (
                     <li key={tx._id} className="flex items-center gap-4 p-4">
                         {/* Type icon: quiet square, not a colored coin */}
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-border bg-secondary">
-                            <Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary">
+                            <Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.7} />
                         </div>
 
                         <div className="min-w-0 flex-1">

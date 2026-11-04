@@ -95,20 +95,24 @@ export function LoginForm() {
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: "" })); }}
-                        className="pr-10"
+                        className="pr-12"
                     />
                     <button
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
                         aria-label={showPassword ? "Hide password" : "Show password"}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                        className="absolute right-1 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
                     >
-                        {showPassword ? <EyeOff className="h-4 w-4" strokeWidth={1.5} /> : <Eye className="h-4 w-4" strokeWidth={1.5} />}
+                        {showPassword ? <EyeOff className="h-4 w-4" strokeWidth={1.7} /> : <Eye className="h-4 w-4" strokeWidth={1.7} />}
                     </button>
                 </div>
             </Field>
 
-            {errors.form && <p className="text-xs text-destructive">{errors.form}</p>}
+            {errors.form && (
+                <p role="alert" className="rounded-field border border-destructive/30 bg-destructive/5 px-4 py-3 text-[13px] text-destructive">
+                    {errors.form}
+                </p>
+            )}
 
             <Button type="submit" size="lg" className="w-full" loading={loading}>
                 Sign In

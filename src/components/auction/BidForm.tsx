@@ -54,11 +54,11 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
                     Enter Your Maximum Bid
                 </Label>
                 <div className="relative group">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-display font-semibold text-muted-foreground group-focus-within:text-gold transition-colors">$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-semibold text-muted-foreground group-focus-within:text-gold transition-colors">$</span>
                     <Input
                         id="bid-amount"
                         type="number"
-                        className="pl-10 h-14 text-2xl font-display font-semibold bg-background border-border focus:border-gold/50 focus:ring-gold/20 text-foreground transition-all"
+                        className="h-14 pl-10 text-2xl font-semibold"
                         {...register("amount", { valueAsNumber: true })}
                     />
                 </div>
@@ -70,7 +70,8 @@ export function BidForm({ auction, onBidPlaced }: BidFormProps) {
 
             <Button
                 type="submit"
-                className="w-full h-14 text-base font-semibold bg-gradient-to-r from-gold to-amber-600 text-background hover:from-gold hover:to-amber-500 shadow-lg shadow-gold/20 transition-all"
+                size="lg"
+                className="h-14 w-full text-base"
                 disabled={isSubmitting}
             >
                 {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Gavel className="h-5 w-5 mr-2" />}

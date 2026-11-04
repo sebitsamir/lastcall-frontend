@@ -11,18 +11,18 @@ interface SellerCardProps {
 
 export function SellerCard({ name }: SellerCardProps) {
     return (
-        <div className="flex items-center gap-4 border border-border bg-card p-4">
-            {/* Monogram avatar: sharp, editorial, no stock photography */}
-            <div className="flex h-11 w-11 items-center justify-center border border-border bg-secondary font-serif text-lg text-foreground">
+        <div className="flex items-center gap-4 rounded-card border border-border bg-card p-4">
+            {/* Monogram avatar: no stock photography */}
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/12 text-base font-bold text-primary-text">
                 {(name ?? "L").charAt(0).toUpperCase()}
             </div>
 
             <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-foreground">
+                <p className="truncate text-sm font-semibold text-foreground">
                     {name ?? "Verified Seller"}
                 </p>
-                <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <ShieldCheck className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                <p className="mt-0.5 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+                    <ShieldCheck className="h-4 w-4 text-primary-text" strokeWidth={1.7} />
                     Authenticated & verified
                 </p>
             </div>

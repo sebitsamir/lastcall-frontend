@@ -24,19 +24,22 @@ export function LiveTicker({ auctions }: LiveTickerProps) {
 
     return (
         <section
-            className="relative overflow-hidden border-y border-border bg-card/50"
+            className="relative overflow-hidden rounded-full border border-border bg-card"
             aria-label="Live auctions ticker"
         >
-            {/* Hard-edged "LIVE NOW" plate. No gradients — editorial, not decorative. */}
-            <div className="absolute left-0 top-0 z-10 flex h-full items-center border-r border-border bg-background px-4">
-                <span className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.2em] text-primary">
-                    <span className="h-1 w-1 animate-pulse rounded-full bg-primary" />
-                    Live Now
+            {/* "Live" plate pinned to the left edge of the strip. */}
+            <div className="absolute left-0 top-0 z-10 flex h-full items-center border-r border-border bg-card px-3 sm:px-5">
+                <span className="flex items-center gap-2 text-[13px] font-semibold text-live">
+                    <span className="relative grid h-2 w-2 place-items-center" aria-hidden="true">
+                        <span className="animate-live-ping absolute inset-0 rounded-full bg-current" />
+                        <span className="relative h-2 w-2 rounded-full bg-current" />
+                    </span>
+                    Live now
                 </span>
             </div>
 
             {/* Marquee track: pauses on hover so users can actually read a lot. */}
-            <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
+            <div className="flex w-max animate-marquee pl-24 hover:[animation-play-state:paused] sm:pl-32">
                 <TickerRow auctions={auctions} />
                 {/* Duplicate for the seamless loop; hidden from assistive tech. */}
                 <TickerRow auctions={auctions} hidden />
@@ -53,14 +56,14 @@ function TickerRow({ auctions, hidden = false }: { auctions: IAuction[]; hidden?
                 <Link
                     key={`${auction._id}${hidden ? "-dup" : ""}`} // Stable, collision-free keys across both passes.
                     href={`/auctions/${auction._id}`}
-                    className="flex items-center gap-3 whitespace-nowrap border-r border-border px-6 py-3 transition-colors hover:bg-white/5"
+                    className="flex items-center gap-3 whitespace-nowrap border-r border-border px-6 py-3 transition-colors hover:bg-secondary"
                     tabIndex={hidden ? -1 : undefined} // Duplicate is not focusable.
                 >
                     {/* Lot identity */}
-                    <span className="text-sm text-foreground">{auction.title}</span>
+                    <span className="text-sm font-medium text-foreground">{auction.title}</span>
 
                     {/* Value — gold, tabular, precise */}
-                    <span className="text-sm font-medium tabular-nums text-primary">
+                    <span className="text-sm font-semibold tabular-nums text-primary-text">
                         {formatMoney(auction.currentBid ?? auction.startingPrice ?? 0)}
                     </span>
 

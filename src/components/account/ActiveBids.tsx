@@ -54,7 +54,7 @@ export function ActiveBids() {
 
     if (status === "loading") {
         return (
-            <div className="space-y-0 divide-y divide-border border border-border bg-card">
+            <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-card">
                 {Array.from({ length: 2 }, (_, i) => (
                     <div key={i} className="flex items-center gap-4 p-4">
                         <div className="flex-1 space-y-2">
@@ -89,7 +89,7 @@ export function ActiveBids() {
     }
 
     return (
-        <ol className="divide-y divide-border border border-border bg-card">
+        <ol className="divide-y divide-border overflow-hidden rounded-card border border-border bg-card">
             {bids.map((bid) => {
                 const auction = bid.auction!;
 
@@ -111,7 +111,7 @@ export function ActiveBids() {
                         <div className="min-w-0 flex-1">
                             <Link
                                 href={`/auctions/${auction._id}`}
-                                className="block truncate font-serif text-base text-foreground transition-colors hover:text-primary"
+                                className="block truncate text-base font-semibold text-foreground transition-colors hover:text-primary-text"
                             >
                                 {auction.title}
                             </Link>

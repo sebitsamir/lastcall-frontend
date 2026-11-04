@@ -12,15 +12,15 @@ interface FieldProps {
 
 export function Field({ label, hint, error, htmlFor, children, className }: FieldProps) {
     return (
-        <div className={cn("space-y-2", className)}>
-            <div className="flex items-baseline justify-between">
-                <label htmlFor={htmlFor} className="text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground">
+        <div className={cn("space-y-1.5", className)}>
+            <div className="flex items-baseline justify-between gap-3">
+                <label htmlFor={htmlFor} className="text-[13px] font-semibold text-muted-foreground">
                     {label}
                 </label>
-                {hint && <span className="text-[10px] text-muted-foreground/60">{hint}</span>}
+                {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
             </div>
             {children}
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p className="text-[13px] text-destructive">{error}</p>}
         </div>
     );
 }

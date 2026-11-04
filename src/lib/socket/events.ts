@@ -12,6 +12,8 @@ export const SOCKET_EVENTS = {
     newBid: "newBid",
     /** Server → user: you lost the lead. Drives the outbid experience. */
     outbid: "outbid",
+    /** Server → room: the lot closed and settlement ran. */
+    auctionEnded: "auctionEnded",
 } as const;
 
 /** Payload broadcast to the auction room when a bid is accepted. */
@@ -19,13 +21,22 @@ export interface NewBidPayload {
     auctionId: string;
     currentBid: number;        // The new highest bid
     bidderName: string;        // Display name (backend sanitizes)
-    bidderId?: string;         // Present when the backend populates it
+    bidderId: string;
     bidCount?: number;         // Optional running total for the card footer
 }
 
 /** Payload sent to the previous highest bidder when they lose the lead. */
 export interface OutbidPayload {
     auctionId: string;
-    currentBid: number;        // What beat you
-    releasedAmount?: number;   // Funds the escrow just released back to you
+    currentBid: number;
+    previousBidderId: string;
+    releasedAmount: number;
+}
+
+export interface AuctionEndedPayload {
+    auctionId: string;
+    status: "completed" | "cancelled" | string;
+    winnerId?: string;
+    winningBid?: number;
+    message?: string;
 }

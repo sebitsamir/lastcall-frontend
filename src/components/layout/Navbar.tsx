@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Heart, User, LogOut } from "lucide-react";
-import { Logo } from "./Logo";
+import { Wordmark } from "./Wordmark";
 
 export function Navbar() {
     const { user, logout } = useAuthStore();
@@ -14,11 +14,9 @@ export function Navbar() {
             {/* Subtle top accent line */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
 
-            <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
+            <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-6 lg:px-8">
                 {/* Logo */}
-                <Link href="/" className="group">
-                    <Logo size="lg" />
-                </Link>
+                <Wordmark />
 
                 {/* Right Side */}
                 <div className="flex items-center gap-2">
@@ -61,7 +59,7 @@ export function Navbar() {
                                 </Button>
                             </Link>
                             <Link href="/register">
-                                <Button size="sm" className="bg-gradient-to-r from-gold to-amber-600 text-background font-medium hover:from-gold hover:to-amber-500 shadow-lg shadow-gold/20">
+                                <Button size="sm">
                                     Get Started
                                 </Button>
                             </Link>

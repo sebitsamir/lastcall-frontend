@@ -19,7 +19,8 @@ if (!API_BASE_URL) {
 
 const api = axios.create({
     baseURL: API_BASE_URL,
-    withCredentials: true, // For httpOnly cookies if you use them
+    withCredentials: true,
+    timeout: 12_000,
 });
 
 // REQUEST INTERCEPTOR: Attach access token to every request
@@ -53,10 +54,8 @@ api.interceptors.response.use(
             try {
                 const refreshToken = Cookies.get("refreshToken");
                 if (!refreshToken) {
-                    // No refresh token — force logout
                     Cookies.remove("accessToken");
                     Cookies.remove("refreshToken");
-                    window.location.href = "/login";
                     return Promise.reject(error);
                 }
 

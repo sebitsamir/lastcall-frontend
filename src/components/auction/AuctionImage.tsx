@@ -82,6 +82,7 @@ export function AuctionImage({
                 alt={alt}
                 fill
                 sizes={sizes}
+                quality={75}
                 loader={cloudinaryLoader}
                 loading={eager ? "eager" : "lazy"}
                 fetchPriority={eager ? "high" : "auto"}
@@ -97,11 +98,12 @@ export function AuctionImage({
     }
 
     return (
-        <Image
+            <Image
             src={normalizedSrc}
             alt={alt}
             fill
             sizes={sizes}
+            quality={75}
             loading={eager ? "eager" : "lazy"}
             fetchPriority={eager ? "high" : "auto"}
             onError={() => {
