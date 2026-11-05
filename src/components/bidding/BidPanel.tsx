@@ -22,9 +22,12 @@ import { classifyBidError, type BidFailure } from "@/lib/bidding/errors";
 import { availableBalance, minimumNextBid } from "@/lib/bidding/rules";
 import { formatMoney } from "@/lib/formatting/format";
 
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
+
+/** Quick-raise steps offered above the current bid (design `.q` chips). */
+const QUICK_RAISES = [100, 500, 1000] as const;
 
 interface BidPanelProps {
     auction: IAuction;
@@ -62,11 +65,11 @@ export function BidPanel({ auction, onBidPlaced }: BidPanelProps) {
     /* ── Guests can admire, not bid ──────────────────────────────────────── */
     if (!isAuthenticated) {
         return (
-            <div className="space-y-3 border border-border bg-card p-5">
+            <div className="space-y-3">
                 <p className="text-sm leading-relaxed text-muted-foreground">
                     Sign in to place bids on this lot.
                 </p>
-                <Button className="w-full" asChild>
+                <Button size="lg" className="w-full" asChild>
                     <Link href="/login">Sign In to Bid</Link>
                 </Button>
             </div>
@@ -109,16 +112,22 @@ export function BidPanel({ auction, onBidPlaced }: BidPanelProps) {
     };
 
     /* ── Render ──────────────────────────────────────────────────────────── */
-    return (
-        <div className="space-y-4 border border-border bg-card p-5">
-            {/* Minimum next bid: the rule, stated plainly */}
-            <div className="flex items-baseline justify-between text-xs text-muted-foreground">
-                <span className="uppercase tracking-[0.15em]">Minimum next bid</span>
-                <span className="tabular-nums text-foreground">{formatMoney(minNext)}</span>
-            </div>
+    const currentBid = auction.currentBid ?? auction.startingPrice ?? 0;
 
-            <div className="flex gap-2">
-                <Input
+    const pick = (amount: number, followMinimum: boolean) => {
+        setValue(String(amount));
+        setTouched(!followMinimum); // "Min" re-attaches the field to live updates
+        setFailure(null);
+    };
+
+    return (
+        <div className="grid gap-[18px]">
+            {/* The bid field: one big, thumb-friendly number */}
+            <label
+                className="flex h-14 items-center gap-2 rounded-field border border-border bg-secondary px-[18px] transition-[border-color,box-shadow] focus-within:border-primary-text focus-within:ring-4 focus-within:ring-primary/12"
+            >
+                <span className="text-xl text-muted-foreground">$</span>
+                <input
                     type="number"
                     inputMode="numeric"
                     min={minNext}
@@ -128,26 +137,55 @@ export function BidPanel({ auction, onBidPlaced }: BidPanelProps) {
                         setTouched(true);
                         setFailure(null); // editing is a recovery action itself
                     }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") requestConfirm();
+                    }}
                     aria-label="Your bid amount"
+                    className="min-w-0 flex-1 appearance-none border-0 bg-transparent text-[22px] font-semibold tabular-nums text-foreground outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
                 />
-                <Button onClick={requestConfirm} className="shrink-0">
-                    Place Bid
-                </Button>
+                <span className="whitespace-nowrap text-xs text-muted-foreground">
+                    Min {formatMoney(minNext)}
+                </span>
+            </label>
+
+            {/* Quick bids: Min, then fixed raises over the current bid */}
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <button
+                    type="button"
+                    onClick={() => pick(minNext, true)}
+                    className="h-11 rounded-xl border border-border bg-secondary text-sm font-semibold transition-colors hover:border-primary-text hover:text-primary-text"
+                >
+                    Min
+                </button>
+                {QUICK_RAISES.map((raise) => (
+                    <button
+                        key={raise}
+                        type="button"
+                        onClick={() => pick(Math.max(minNext, currentBid + raise), false)}
+                        className="h-11 rounded-xl border border-border bg-secondary text-sm font-semibold tabular-nums transition-colors hover:border-primary-text hover:text-primary-text max-[400px]:text-[13px]"
+                    >
+                        +{formatMoney(raise)}
+                    </button>
+                ))}
             </div>
 
+            <Button size="lg" onClick={requestConfirm} className="w-full">
+                Place Bid
+            </Button>
+
             {/* Escrow transparency: liquid now vs liquid if you lead */}
-            <div className="space-y-1 border-t border-border pt-3 text-xs text-muted-foreground">
+            <div className="space-y-1 text-[13px] text-muted-foreground">
                 <div className="flex justify-between">
                     <span>Available balance</span>
                     <span className="tabular-nums text-foreground">{formatMoney(balance)}</span>
                 </div>
                 <div className="flex justify-between">
                     <span>After bid</span>
-                    <span className={afterBid < 0 ? "tabular-nums text-destructive" : "tabular-nums"}>
+                    <span className={cn("tabular-nums", afterBid < 0 && "text-destructive")}>
                         {formatMoney(afterBid)} available
                     </span>
                 </div>
-                <p className="pt-1 text-[10px] leading-relaxed text-muted-foreground/70">
+                <p className="pt-1 text-xs leading-relaxed">
                     Funds are reserved only while you are the highest bidder.
                 </p>
             </div>
@@ -200,7 +238,7 @@ export function BidPanel({ auction, onBidPlaced }: BidPanelProps) {
                 title="Confirm your bid"
                 description={
                     <>
-                        <span className="font-serif text-2xl text-primary tabular-nums">
+                        <span className="text-2xl font-[650] text-primary-text tabular-nums">
                             {formatMoney(parsed || 0)}
                         </span>
                         <p className="mt-2">
@@ -233,23 +271,23 @@ function FailureNote({
     actionHref?: string;
 }) {
     return (
-        <div className="space-y-2 border border-destructive/30 bg-destructive/5 p-4">
-            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-destructive">
+        <div className="space-y-2 rounded-field border border-destructive/30 bg-destructive/5 p-4">
+            <p className="text-[13px] font-semibold text-destructive">
                 {title}
             </p>
-            <p className="text-xs leading-relaxed text-muted-foreground">{body}</p>
+            <p className="text-[13px] leading-relaxed text-muted-foreground">{body}</p>
             {actionLabel &&
                 (actionHref ? (
                     <Link
                         href={actionHref}
-                        className="inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
+                        className="inline-block text-[13px] font-semibold text-primary-text underline-offset-4 hover:underline"
                     >
                         {actionLabel}
                     </Link>
                 ) : (
                     <button
                         onClick={onAction}
-                        className="inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
+                        className="inline-block text-[13px] font-semibold text-primary-text underline-offset-4 hover:underline"
                     >
                         {actionLabel}
                     </button>

@@ -8,11 +8,14 @@ import { AuctionImage } from "@/components/auction/AuctionImage";
 interface AuctionGalleryProps {
     images: string[];
     title: string;
+    /** Absolutely-positioned controls (e.g. the watchlist heart) layered on the main image. */
+    overlay?: React.ReactNode;
 }
 
 export function AuctionGallery({
     images,
     title,
+    overlay,
 }: AuctionGalleryProps) {
     const [active, setActive] =
         useState(0);
@@ -31,13 +34,16 @@ export function AuctionGallery({
                 className="
                     relative flex aspect-[4/3]
                     items-center justify-center
-                    border border-border
+                    rounded-[20px] border border-border
+                    sm:rounded-hero
+                    lg:aspect-square
                     bg-secondary
-                    font-serif text-lg
-                    text-muted-foreground/40
+                    text-lg
+                    text-muted-foreground/60
                 "
             >
                 No image available
+                {overlay}
             </div>
         );
     }
@@ -48,27 +54,32 @@ export function AuctionGallery({
     );
 
     return (
-        <div className="space-y-2">
+        <div className="grid gap-3">
             <div
                 className="
                     relative aspect-[4/3]
                     overflow-hidden
-                    border border-border
+                    rounded-[20px] border border-border
                     bg-secondary
+                    sm:rounded-hero
+                    lg:aspect-square
                 "
             >
                 <AuctionImage
+                    key={cleanImages[safeActive]}
                     src={cleanImages[safeActive]}
                     alt={`${title} — image ${
                         safeActive + 1
                     } of ${cleanImages.length}`}
                     eager={safeActive === 0}
-                    sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    className="animate-view-in"
                 />
+                {overlay}
             </div>
 
             {cleanImages.length > 1 && (
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                     {cleanImages.map(
                         (src, index) => (
                             <button
@@ -86,13 +97,13 @@ export function AuctionGallery({
                                 }
                                 className={cn(
                                     "relative aspect-square",
-                                    "overflow-hidden border",
+                                    "overflow-hidden rounded-2xl border-2",
                                     "bg-secondary",
-                                    "transition-colors",
+                                    "transition-[opacity,border-color]",
                                     index ===
                                         safeActive
-                                        ? "border-primary"
-                                        : "border-border hover:border-muted-foreground/50"
+                                        ? "border-primary-text opacity-100"
+                                        : "border-transparent opacity-70 hover:opacity-100"
                                 )}
                             >
                                 <AuctionImage

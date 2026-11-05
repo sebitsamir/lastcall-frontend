@@ -54,7 +54,7 @@ export function CancelDialog({
 
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/70" onClick={onCancel} aria-hidden />
+            <div className="absolute inset-0 bg-black/60" onClick={onCancel} aria-hidden />
 
             <motion.div
                 role="dialog"
@@ -63,21 +63,21 @@ export function CancelDialog({
                 initial={{ opacity: 0, scale: 0.96, y: 8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ type: "spring", duration: 0.35, bounce: 0.15 }}
-                className="relative w-full max-w-md border border-border bg-popover p-6"
+                className="relative w-full max-w-md rounded-panel border border-border bg-popover p-6 shadow-lift"
             >
                 <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-destructive/30 bg-destructive/10">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
                         <AlertTriangle className="h-5 w-5 text-destructive" strokeWidth={1.5} />
                     </div>
                     <div className="space-y-2">
-                        <h2 className="font-serif text-xl text-foreground">Withdraw Lot</h2>
+                        <h2 className="text-xl text-foreground">Withdraw Lot</h2>
                         <p className="text-sm leading-relaxed text-muted-foreground">
                             Are you sure you want to cancel <span className="font-medium text-foreground">{lotTitle}</span>?
                         </p>
 
                         {/* The crucial trust mechanic: explain the escrow release */}
                         {hasBids && (
-                            <div className="mt-3 border border-border bg-card p-3 text-xs leading-relaxed text-muted-foreground">
+                            <div className="mt-3 rounded-field border border-border bg-card p-3 text-xs leading-relaxed text-muted-foreground">
                                 <p className="font-medium text-foreground">Active bids detected.</p>
                                 <p className="mt-1">
                                     The current highest bid of {formatMoney(currentBid!)} will be

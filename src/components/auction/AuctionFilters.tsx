@@ -1,8 +1,9 @@
 "use client";
 
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
+import { AUCTION_CATEGORIES } from "@/lib/api/auctions";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { NativeSelect } from "@/components/ui/select";
 
 interface AuctionFiltersProps {
     filters: {
@@ -16,27 +17,36 @@ interface AuctionFiltersProps {
     onClear: () => void;
 }
 
+/** Small-caps group label used by every filter group (design `.fl`). */
+const GROUP_LABEL = "mb-2.5 block text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground";
+
 export function AuctionFilters({ filters, onFilterChange, onClear }: AuctionFiltersProps) {
     return (
-        <div className="glass rounded-2xl p-6 space-y-6">
+        <div className="grid gap-[22px] rounded-panel border border-border bg-card p-[22px]">
             <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-                    <SlidersHorizontal className="h-5 w-5 text-cyan-400" />
-                    Filters
-                </h3>
-                <Button variant="ghost" size="sm" onClick={onClear} className="text-xs text-text-secondary hover:text-text-primary">
-                    Clear All
-                </Button>
+                <h3 className="text-lg">Filters</h3>
+                <button
+                    type="button"
+                    onClick={onClear}
+                    className="text-[13px] font-semibold text-primary-text"
+                >
+                    Reset
+                </button>
             </div>
 
             {/* Search */}
-            <div className="space-y-2">
-                <label className="text-sm font-medium text-text-secondary">Search</label>
+            <div>
+                <label className={GROUP_LABEL} htmlFor="filter-search">Search</label>
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary/50" />
+                    <Search
+                        className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                        strokeWidth={1.7}
+                        aria-hidden="true"
+                    />
                     <Input
-                        placeholder="Watches, Art, Cars..."
-                        className="pl-9 bg-background-card/50"
+                        id="filter-search"
+                        placeholder="Watches, Art, Cameras..."
+                        className="pl-11"
                         value={filters.search}
                         onChange={(e) => onFilterChange("search", e.target.value)}
                     />
@@ -44,55 +54,45 @@ export function AuctionFilters({ filters, onFilterChange, onClear }: AuctionFilt
             </div>
 
             {/* Category */}
-            <div className="space-y-2">
-                <label className="text-sm font-medium text-text-secondary">Category</label>
-                <select
-                    className="flex h-11 w-full rounded-lg border border-white/10 bg-background-card/50 px-4 py-2 text-sm text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+            <div>
+                <label className={GROUP_LABEL} htmlFor="filter-category">Category</label>
+                <NativeSelect
+                    id="filter-category"
                     value={filters.category}
                     onChange={(e) => onFilterChange("category", e.target.value)}
                 >
-                    <option value="all">All Categories</option>
-                    <option value="watches">Luxury Watches</option>
-                    <option value="art">Fine Art</option>
-                    <option value="cars">Classic Cars</option>
-                    <option value="electronics">Electronics</option>
-                </select>
+                    <option value="all">All categories</option>
+                    {AUCTION_CATEGORIES.map((category) => (
+                        <option key={category} value={category}>
+                            {category}
+                        </option>
+                    ))}
+                </NativeSelect>
             </div>
 
             {/* Price Range */}
-            <div className="space-y-2">
-                <label className="text-sm font-medium text-text-secondary">Price Range</label>
-                <div className="flex gap-2">
+            <div>
+                <span className={GROUP_LABEL}>Price range ($)</span>
+                <div className="grid grid-cols-2 gap-2.5">
                     <Input
                         type="number"
+                        inputMode="numeric"
+                        min={0}
                         placeholder="Min"
-                        className="bg-background-card/50"
+                        aria-label="Minimum price"
                         value={filters.minPrice}
                         onChange={(e) => onFilterChange("minPrice", e.target.value)}
                     />
                     <Input
                         type="number"
+                        inputMode="numeric"
+                        min={0}
                         placeholder="Max"
-                        className="bg-background-card/50"
+                        aria-label="Maximum price"
                         value={filters.maxPrice}
                         onChange={(e) => onFilterChange("maxPrice", e.target.value)}
                     />
                 </div>
-            </div>
-
-            {/* Sort By */}
-            <div className="space-y-2">
-                <label className="text-sm font-medium text-text-secondary">Sort By</label>
-                <select
-                    className="flex h-11 w-full rounded-lg border border-white/10 bg-background-card/50 px-4 py-2 text-sm text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-                    value={filters.sortBy}
-                    onChange={(e) => onFilterChange("sortBy", e.target.value)}
-                >
-                    <option value="newest">Newest First</option>
-                    <option value="endingSoon">Ending Soon</option>
-                    <option value="priceLow">Price: Low to High</option>
-                    <option value="priceHigh">Price: High to Low</option>
-                </select>
             </div>
         </div>
     );

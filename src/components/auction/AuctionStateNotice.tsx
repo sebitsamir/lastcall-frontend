@@ -19,9 +19,9 @@ export function AuctionStateNotice({ status, currentBid, startTime }: AuctionSta
 
     if (status === "upcoming") {
         return (
-            <div className="space-y-2 border border-border bg-card p-5">
-                <p className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                    <CalendarClock className="h-3.5 w-3.5" strokeWidth={1.5} />
+            <div className="space-y-2 rounded-field bg-secondary p-4">
+                <p className="flex items-center gap-2 text-[13px] font-semibold text-muted-foreground">
+                    <CalendarClock className="h-4 w-4" strokeWidth={1.7} />
                     Starts {startTime ? new Date(startTime).toLocaleString() : "soon"}
                 </p>
                 <p className="text-sm leading-relaxed text-muted-foreground">
@@ -33,12 +33,12 @@ export function AuctionStateNotice({ status, currentBid, startTime }: AuctionSta
 
     if (status === "completed") {
         return (
-            <div className="space-y-2 border border-border bg-card p-5">
-                <p className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                    <Hammer className="h-3.5 w-3.5" strokeWidth={1.5} />
+            <div className="space-y-2 rounded-field bg-secondary p-4">
+                <p className="flex items-center gap-2 text-[13px] font-semibold text-muted-foreground">
+                    <Hammer className="h-4 w-4" strokeWidth={1.7} />
                     Auction ended
                 </p>
-                <p className="font-serif text-2xl text-foreground tabular-nums">
+                <p className="text-2xl font-[650] tracking-[-0.02em] text-foreground tabular-nums">
                     {currentBid != null ? `Winning bid ${formatMoney(currentBid)}` : "Sold"}
                 </p>
             </div>
@@ -47,9 +47,9 @@ export function AuctionStateNotice({ status, currentBid, startTime }: AuctionSta
 
     // cancelled (and any unknown future state fails safe here)
     return (
-        <div className="space-y-2 border border-destructive/30 bg-destructive/5 p-5">
-            <p className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-destructive">
-                <Flag className="h-3.5 w-3.5" strokeWidth={1.5} />
+        <div className="space-y-2 rounded-field border border-destructive/30 bg-destructive/5 p-4">
+            <p className="flex items-center gap-2 text-[13px] font-semibold text-destructive">
+                <Flag className="h-4 w-4" strokeWidth={1.7} />
                 Auction cancelled
             </p>
             <p className="text-sm leading-relaxed text-muted-foreground">

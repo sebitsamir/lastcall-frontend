@@ -13,7 +13,7 @@ import { ActiveBids } from "@/components/account/ActiveBids";
 
 export default function BidsPage() {
     return (
-        <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-10 md:px-8">
+        <div className="mx-auto w-full max-w-[1200px] space-y-8 px-[clamp(16px,3vw,32px)] py-7">
             <SectionHeading
                 overline="Open positions"
                 title="Active Bids"

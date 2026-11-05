@@ -22,30 +22,41 @@ interface BalanceCardProps {
 export function BalanceCard({ label, value, tone = "default", hint, loading }: BalanceCardProps) {
     if (loading) {
         return (
-            <div className="space-y-3 border border-border bg-card p-5">
+            <div className="space-y-3 rounded-card border border-border bg-card p-5">
                 <Skeleton className="h-3 w-20" />
                 <Skeleton className="h-8 w-28" />
             </div>
         );
     }
 
+    // The liquid-funds card is the one gold surface on the page (design `.wal`).
+    const gold = tone === "gold";
+
     return (
-        <div className="space-y-2 border border-border bg-card p-5">
-            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+        <div
+            className={cn(
+                "space-y-2 rounded-card p-5",
+                gold ? "bg-primary text-primary-foreground" : "border border-border bg-card"
+            )}
+        >
+            <p className={cn("text-xs font-medium", gold ? "opacity-75" : "text-muted-foreground")}>
                 {label}
             </p>
 
             <MorphingMoney
                 value={value}
                 className={cn(
-                    "text-2xl font-medium md:text-3xl",
-                    tone === "gold" && "text-primary",
+                    "text-2xl font-bold tracking-[-0.03em] md:text-3xl",
                     tone === "default" && "text-foreground",
                     tone === "muted" && "text-muted-foreground"
                 )}
             />
 
-            {hint && <p className="text-xs leading-relaxed text-muted-foreground/70">{hint}</p>}
+            {hint && (
+                <p className={cn("text-xs leading-relaxed", gold ? "opacity-75" : "text-muted-foreground")}>
+                    {hint}
+                </p>
+            )}
         </div>
     );
 }

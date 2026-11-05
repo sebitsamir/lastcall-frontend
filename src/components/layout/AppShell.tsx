@@ -4,23 +4,19 @@ import { usePathname } from "next/navigation";
 import { TopHeader } from "./TopHeader";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { Footer } from "./Footer";
 import { useAuthStore } from "@/store/authStore";
-import { PageTransition } from "./PageTransition";
+import { NotificationManager } from "@/components/notifications/NotificationManager";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const { isAuthenticated, isLoading } = useAuthStore();
+    const { isAuthenticated } = useAuthStore();
 
     // Keep auth pages immersive — no shell chrome
     const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/register");
 
-    if (isLoading) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-background">
-                <div className="h-5 w-5 animate-spin rounded-full border border-primary border-t-transparent" />
-            </div>
-        );
-    }
+    // The account rail only belongs to the account area.
+    const showSidebar = isAuthenticated && pathname.startsWith("/account");
 
     if (isAuthPage) {
         return <>{children}</>;
@@ -30,13 +26,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex min-h-screen flex-col bg-background text-foreground">
             <TopHeader />
 
-            <div className="flex flex-1">
-                {isAuthenticated && <DesktopSidebar />}
-                <main id="main-content" className="flex-1 w-full min-w-0 pb-16 md:pb-0">
-                    <PageTransition>{children}</PageTransition>
+            {showSidebar ? (
+                <div className="mx-auto flex w-full max-w-[1200px] flex-1">
+                    <DesktopSidebar />
+                    <main id="main-content" className="w-full min-w-0 flex-1 pb-24 md:pb-0">
+                        {children}
+                    </main>
+                </div>
+            ) : (
+                <main id="main-content" className="w-full min-w-0 flex-1 pb-24 md:pb-0">
+                    {children}
                 </main>
-            </div>
+            )}
 
+            {isAuthenticated && <NotificationManager />}
+
+            <Footer />
             <MobileBottomNav />
         </div>
     );

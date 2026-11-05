@@ -113,7 +113,7 @@ export default function WatchlistPage() {
 
     /* ── Render ──────────────────────────────────────────────────────────── */
     return (
-        <div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-10 md:px-8">
+        <div className="mx-auto w-full max-w-5xl space-y-6 px-[clamp(16px,3vw,32px)] py-7">
             <SectionHeading
                 overline="Your positions"
                 title="Watchlist"
@@ -122,10 +122,10 @@ export default function WatchlistPage() {
 
             {/* Board stats: counts, not decoration */}
             {status === "ready" && lots.length > 0 && (
-                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground tabular-nums">
+                <p className="text-[13px] font-medium text-muted-foreground tabular-nums">
                     {lots.length} Lots Watched
                     {endingSoonCount > 0 && (
-                        <span className="text-accent"> · {endingSoonCount} Ending Soon</span>
+                        <span className="text-destructive"> · {endingSoonCount} Ending Soon</span>
                     )}
                 </p>
             )}
@@ -149,7 +149,7 @@ export default function WatchlistPage() {
             )}
 
             {status === "ready" && lots.length > 0 && (
-                <ol className="divide-y divide-border border border-border bg-card">
+                <ol className="grid gap-3">
                     {lots.map((auction) => (
                         <WatchListRow
                             key={auction._id}
@@ -168,16 +168,17 @@ export default function WatchlistPage() {
 /** Mirrors row geometry so the load-in never jumps. */
 function WatchlistSkeleton() {
     return (
-        <div className="divide-y divide-border border border-border bg-card">
+        <div className="grid gap-3">
             {Array.from({ length: 4 }, (_, i) => (
-                <div key={i} className="flex items-center gap-4 p-4">
-                    <Skeleton className="h-14 w-14" />
-                    <div className="flex-1 space-y-2">
-                        <Skeleton className="h-3 w-24" />
-                        <Skeleton className="h-4 w-48" />
+                <div key={i} className="flex min-w-0 items-center gap-3 rounded-card border border-border bg-card p-3 sm:gap-4">
+                    <Skeleton className="h-[72px] w-[72px] shrink-0 sm:h-[84px] sm:w-[84px]" />
+                    <div className="min-w-0 flex-1 space-y-2">
+                        <Skeleton className="h-3 w-20" />
+                        <Skeleton className="h-4 w-full max-w-48" />
+                        <Skeleton className="h-3 w-28" />
                     </div>
-                    <Skeleton className="h-4 w-16" />
-                    <Skeleton className="h-5 w-20" />
+                    <Skeleton className="hidden h-5 w-20 shrink-0 sm:block" />
+                    <Skeleton className="h-11 w-11 shrink-0 rounded-full" />
                 </div>
             ))}
         </div>

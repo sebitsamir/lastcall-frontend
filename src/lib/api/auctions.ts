@@ -24,6 +24,7 @@ export interface AuctionQuery {
     sortBy?: AuctionSort;
     page?: number;
     limit?: number;
+    status?: "active" | "upcoming" | "completed" | "cancelled" | "floor";
 }
 
 /** Normalized page shape the UI can rely on, regardless of backend quirks. */

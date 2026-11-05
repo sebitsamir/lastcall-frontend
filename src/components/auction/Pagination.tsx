@@ -31,12 +31,12 @@ export function Pagination({ page, pages, onPageChange, disabled }: PaginationPr
                 disabled={disabled || page <= 1}
                 onClick={() => onPageChange(page - 1)}
             >
-                <ChevronLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
+                <ChevronLeft className="h-4 w-4" strokeWidth={1.7} />
                 Prev
             </Button>
 
             {/* tabular-nums keeps the indicator from shifting as digits change */}
-            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground tabular-nums">
+            <span className="text-[13px] font-medium text-muted-foreground tabular-nums">
                 Page {page} / {pages}
             </span>
 
@@ -47,7 +47,7 @@ export function Pagination({ page, pages, onPageChange, disabled }: PaginationPr
                 onClick={() => onPageChange(page + 1)}
             >
                 Next
-                <ChevronRight className="h-3.5 w-3.5" strokeWidth={1.5} />
+                <ChevronRight className="h-4 w-4" strokeWidth={1.7} />
             </Button>
         </nav>
     );

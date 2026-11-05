@@ -63,21 +63,21 @@ export default function ProfilePage() {
     };
 
     return (
-        <div className="mx-auto w-full max-w-3xl space-y-10 px-4 py-10 md:px-8">
+        <div className="mx-auto w-full max-w-3xl space-y-10 px-[clamp(16px,3vw,32px)] py-7">
             <SectionHeading
                 overline="Identity"
                 title="Profile"
-                description="How you appear across the house — bids, history and leaderboards."
+                description="Your name appears on your bids and seller profile."
             />
 
-            <form onSubmit={submit} className="space-y-6 border border-border bg-card p-6">
+            <form onSubmit={submit} className="space-y-6 rounded-card border border-border bg-card p-6">
                 {/* Monogram + tenure: identity at a glance */}
                 <div className="flex items-center gap-4 border-b border-border pb-6">
-                    <div className="flex h-14 w-14 items-center justify-center border border-border bg-secondary font-serif text-2xl text-foreground">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/12 text-2xl font-bold text-primary-text">
                         {(storedName || "L").charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <p className="font-serif text-xl text-foreground">{storedName || "Collector"}</p>
+                        <p className="text-xl text-foreground">{storedName || "Collector"}</p>
                         {memberSince && (
                             <p className="mt-0.5 text-xs text-muted-foreground">
                                 Member since {new Date(memberSince).toLocaleDateString()}

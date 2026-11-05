@@ -28,17 +28,21 @@ const Toaster = ({ ...props }: ToasterProps) => {
           <Loader2Icon className="size-4 animate-spin" />
         ),
       }}
+      /*
+       * Pill toasts with inverted colors (light on dark theme, dark on light),
+       * straight from the design. The tokens are HSL triplets, so wrap them.
+       */
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--normal-bg": "hsl(var(--foreground))",
+          "--normal-text": "hsl(var(--background))",
+          "--normal-border": "transparent",
+          "--border-radius": "999px",
         } as React.CSSProperties
       }
       toastOptions={{
         classNames: {
-          toast: "cn-toast",
+          toast: "cn-toast shadow-lift !px-5 !py-3.5 !text-sm !font-medium",
         },
       }}
       {...props}

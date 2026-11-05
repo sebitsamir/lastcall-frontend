@@ -2,88 +2,81 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { FormEvent } from "react";
-import { Heart, Search, User, X } from "lucide-react";
+import { Search } from "lucide-react";
 
 import { useAuthStore } from "@/store/authStore";
+import { cn } from "@/lib/utils";
+
+import { Wordmark } from "./Wordmark";
+import { ThemeToggle } from "./ThemeToggle";
+import { NotificationBell } from "./NotificationBell";
+
+interface NavItem {
+    href: string;
+    label: string;
+    /** Only shown to signed-in users. */
+    authOnly?: boolean;
+}
+
+const NAV: NavItem[] = [
+    { href: "/auctions", label: "Auctions" },
+    { href: "/categories", label: "Categories" },
+    { href: "/auctions/create", label: "Sell", authOnly: true },
+    { href: "/watchlist", label: "Watchlist" },
+];
+
+/** "/auctions" must not light up for "/auctions/create" (Sell owns that route). */
+function isActive(pathname: string, href: string): boolean {
+    if (href === "/auctions") {
+        return (
+            pathname === "/auctions" ||
+            (pathname.startsWith("/auctions/") && !pathname.startsWith("/auctions/create"))
+        );
+    }
+    return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function initials(name?: string): string {
+    const letters = (name ?? "")
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part.charAt(0))
+        .join("")
+        .toUpperCase();
+
+    return letters || "ME";
+}
 
 export function TopHeader() {
     const router = useRouter();
     const pathname = usePathname();
 
-    const { isAuthenticated } = useAuthStore();
+    const { user, isAuthenticated } = useAuthStore();
 
-    const [searchOpen, setSearchOpen] = useState(false);
     const [query, setQuery] = useState("");
-
-    const inputRef = useRef<HTMLInputElement>(null);
-
-    const closeSearch = () => {
-        setSearchOpen(false);
-    };
-
-    const openSearch = () => {
-        /*
-         * Read the existing ?q= value only when the user opens search.
-         * This avoids useSearchParams() in the global application shell.
-         */
-        if (typeof window !== "undefined" && pathname === "/auctions") {
-            const params = new URLSearchParams(window.location.search);
-            setQuery(params.get("q") ?? "");
-        } else {
-            setQuery("");
-        }
-
-        setSearchOpen(true);
-
-        /*
-         * Focus after React renders the search panel.
-         */
-        window.requestAnimationFrame(() => {
-            inputRef.current?.focus();
-        });
-    };
-
-    const toggleSearch = () => {
-        if (searchOpen) {
-            closeSearch();
-        } else {
-            openSearch();
-        }
-    };
+    const [touched, setTouched] = useState(false);
 
     /*
-     * Escape-key handling does not synchronously set state as part
-     * of effect initialization, so it is safe with modern hooks linting.
+     * Pre-fill from the URL only when the user focuses the field on the
+     * auctions page. This avoids useSearchParams() in the global shell and
+     * any server/client markup mismatch.
      */
-    useEffect(() => {
-        if (!searchOpen) {
-            return;
+    const handleFocus = () => {
+        if (touched) return;
+        if (pathname === "/auctions") {
+            const params = new URLSearchParams(window.location.search);
+            setQuery(params.get("q") ?? "");
         }
-
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === "Escape") {
-                closeSearch();
-            }
-        };
-
-        window.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-        };
-    }, [searchOpen]);
+        setTouched(true);
+    };
 
     const handleSearch = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        const normalizedQuery = query
-            .trim()
-            .replace(/\s+/g, " ")
-            .slice(0, 80);
-
-        closeSearch();
+        const normalizedQuery = query.trim().replace(/\s+/g, " ").slice(0, 80);
 
         if (!normalizedQuery) {
             router.push("/auctions");
@@ -97,173 +90,89 @@ export function TopHeader() {
     };
 
     return (
-        <>
-            <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-md md:px-8">
-                <Link
-                    href="/"
-                    onClick={closeSearch}
-                    className="font-serif text-2xl tracking-tight text-foreground"
-                >
-                    LAST
-                    <span className="text-primary">
-                        CALL
-                    </span>
-                </Link>
+        <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-xl">
+            <div
+                className={cn(
+                    "mx-auto grid w-full max-w-[1200px] items-center gap-x-4 gap-y-1.5 px-[clamp(16px,3vw,32px)] pb-3 pt-2.5",
+                    "grid-cols-[1fr_auto] md:grid-cols-[auto_1fr_auto]",
+                    "lg:h-[72px] lg:grid-cols-[auto_minmax(220px,460px)_1fr_auto] lg:gap-6 lg:py-0"
+                )}
+            >
+                <Wordmark className="col-start-1 row-start-1" />
 
-                <nav className="hidden items-center gap-8 md:flex">
-                    <Link
-                        href="/auctions"
-                        onClick={closeSearch}
-                        className="text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                        Auctions
-                    </Link>
-
-                    <Link
-                        href="/categories"
-                        onClick={closeSearch}
-                        className="text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                        Categories
-                    </Link>
-
-                    {isAuthenticated && (
-                        <Link
-                            href="/auctions/create"
-                            onClick={closeSearch}
-                            className="text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                            Sell
-                        </Link>
+                <form
+                    role="search"
+                    onSubmit={handleSearch}
+                    className={cn(
+                        "col-span-2 row-start-2 md:col-span-3",
+                        "lg:col-span-1 lg:col-start-2 lg:row-start-1",
+                        "flex h-11 items-center gap-2.5 rounded-full border border-border bg-card px-4 text-muted-foreground transition-[border-color,box-shadow]",
+                        "focus-within:border-primary-text focus-within:text-foreground focus-within:ring-4 focus-within:ring-primary/12"
                     )}
+                >
+                    <Search className="h-5 w-5 shrink-0" strokeWidth={1.7} aria-hidden="true" />
+                    <input
+                        type="search"
+                        name="q"
+                        value={query}
+                        maxLength={80}
+                        autoComplete="off"
+                        spellCheck={false}
+                        enterKeyHint="search"
+                        placeholder="Search auctions and items"
+                        aria-label="Search auctions"
+                        onFocus={handleFocus}
+                        onChange={(event) => {
+                            setQuery(event.target.value);
+                            setTouched(true);
+                        }}
+                        className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground md:text-[15px]"
+                    />
+                </form>
+
+                <nav
+                    aria-label="Primary"
+                    className="hidden justify-end gap-1 md:col-start-2 md:row-start-1 md:flex lg:col-start-3"
+                >
+                    {NAV.filter((item) => !item.authOnly || isAuthenticated).map((item) => (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            aria-current={isActive(pathname, item.href) ? "page" : undefined}
+                            className={cn(
+                                "flex h-11 items-center rounded-full px-4 text-sm font-medium transition-colors lg:h-10",
+                                isActive(pathname, item.href)
+                                    ? "bg-secondary text-foreground"
+                                    : "text-muted-foreground hover:bg-card hover:text-foreground"
+                            )}
+                        >
+                            {item.label}
+                        </Link>
+                    ))}
                 </nav>
 
-                <div className="flex items-center gap-5">
-                    <button
-                        type="button"
-                        aria-label={
-                            searchOpen
-                                ? "Close auction search"
-                                : "Search auctions"
-                        }
-                        aria-expanded={searchOpen}
-                        aria-controls="global-auction-search"
-                        onClick={toggleSearch}
-                        className="text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                        {searchOpen ? (
-                            <X
-                                className="h-4 w-4"
-                                strokeWidth={1.5}
-                                aria-hidden="true"
-                            />
-                        ) : (
-                            <Search
-                                className="h-4 w-4"
-                                strokeWidth={1.5}
-                                aria-hidden="true"
-                            />
-                        )}
-                    </button>
-
-                    <Link
-                        href="/watchlist"
-                        onClick={closeSearch}
-                        aria-label="Watchlist"
-                        className="text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                        <Heart
-                            className="h-4 w-4"
-                            strokeWidth={1.5}
-                            aria-hidden="true"
-                        />
-                    </Link>
+                <div className="col-start-2 row-start-1 flex items-center gap-1 md:col-start-3 lg:col-start-4">
+                    <ThemeToggle />
+                    {isAuthenticated && <NotificationBell />}
 
                     {isAuthenticated ? (
                         <Link
                             href="/account"
-                            onClick={closeSearch}
                             aria-label="Account"
-                            className="text-muted-foreground transition-colors hover:text-foreground"
+                            className="ml-1 grid h-10 w-10 place-items-center rounded-full border border-border bg-primary/12 text-[13px] font-bold text-primary-text sm:ml-1.5"
                         >
-                            <User
-                                className="h-4 w-4"
-                                strokeWidth={1.5}
-                                aria-hidden="true"
-                            />
+                            {initials(user?.name)}
                         </Link>
                     ) : (
                         <Link
                             href="/login"
-                            onClick={closeSearch}
-                            className="border border-border px-4 py-1.5 text-[10px] uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:text-primary"
+                            className="ml-1 flex h-10 items-center rounded-full border border-border-strong px-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary sm:ml-1.5 sm:px-4"
                         >
-                            Sign In
+                            Sign in
                         </Link>
                     )}
                 </div>
-            </header>
-
-            {searchOpen && (
-                <div
-                    id="global-auction-search"
-                    className="fixed inset-x-0 top-16 z-40 border-b border-border bg-background/95 px-4 py-4 shadow-lg shadow-black/10 backdrop-blur-xl md:px-8"
-                >
-                    <form
-                        onSubmit={handleSearch}
-                        role="search"
-                        className="mx-auto flex max-w-3xl items-center gap-3"
-                    >
-                        <Search
-                            className="h-4 w-4 shrink-0 text-muted-foreground"
-                            strokeWidth={1.5}
-                            aria-hidden="true"
-                        />
-
-                        <input
-                            ref={inputRef}
-                            type="search"
-                            name="q"
-                            value={query}
-                            maxLength={80}
-                            autoComplete="off"
-                            spellCheck={false}
-                            enterKeyHint="search"
-                            placeholder="Search auctions by title or description..."
-                            aria-label="Search auctions"
-                            onChange={(event) => {
-                                setQuery(event.target.value);
-                            }}
-                            className="min-w-0 flex-1 bg-transparent py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground"
-                        />
-
-                        {query.length > 0 && (
-                            <button
-                                type="button"
-                                aria-label="Clear search"
-                                onClick={() => {
-                                    setQuery("");
-                                    inputRef.current?.focus();
-                                }}
-                                className="p-2 text-muted-foreground transition-colors hover:text-foreground"
-                            >
-                                <X
-                                    className="h-4 w-4"
-                                    strokeWidth={1.5}
-                                    aria-hidden="true"
-                                />
-                            </button>
-                        )}
-
-                        <button
-                            type="submit"
-                            className="border border-primary bg-primary px-4 py-2 text-[10px] font-medium uppercase tracking-[0.15em] text-primary-foreground transition-opacity hover:opacity-90"
-                        >
-                            Search
-                        </button>
-                    </form>
-                </div>
-            )}
-        </>
+            </div>
+        </header>
     );
 }

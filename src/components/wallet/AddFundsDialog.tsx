@@ -70,7 +70,7 @@ export function AddFundsDialog({ open, onOpenChange, onSuccess }: AddFundsDialog
 
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/70" onClick={() => onOpenChange(false)} aria-hidden />
+            <div className="absolute inset-0 bg-black/60" onClick={() => onOpenChange(false)} aria-hidden />
 
             <motion.div
                 role="dialog"
@@ -79,10 +79,10 @@ export function AddFundsDialog({ open, onOpenChange, onSuccess }: AddFundsDialog
                 initial={{ opacity: 0, scale: 0.96, y: 8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ type: "spring", duration: 0.35, bounce: 0.15 }}
-                className="relative w-full max-w-sm space-y-5 border border-border bg-popover p-6"
+                className="relative w-full max-w-sm space-y-5 rounded-panel border border-border bg-popover p-6 shadow-lift"
             >
                 <div className="space-y-1">
-                    <h2 className="font-serif text-xl text-foreground">Add Funds</h2>
+                    <h2 className="text-xl text-foreground">Add Funds</h2>
                     <p className="text-sm text-muted-foreground">
                         Funds land in your available balance instantly.
                     </p>
@@ -95,10 +95,10 @@ export function AddFundsDialog({ open, onOpenChange, onSuccess }: AddFundsDialog
                             key={q}
                             onClick={() => setAmount(String(q))}
                             className={cn(
-                                "flex-1 border px-2 py-1.5 text-xs tabular-nums transition-colors",
+                                "h-11 flex-1 rounded-xl border bg-secondary px-2 text-sm font-semibold tabular-nums transition-colors",
                                 Number(amount) === q
-                                    ? "border-primary text-primary"
-                                    : "border-border text-muted-foreground hover:text-foreground"
+                                    ? "border-primary-text text-primary-text"
+                                    : "border-border text-foreground hover:border-primary-text hover:text-primary-text"
                             )}
                         >
                             {formatMoney(q)}

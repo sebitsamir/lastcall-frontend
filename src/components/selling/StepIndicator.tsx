@@ -41,15 +41,15 @@ export function StepIndicator({ steps, current, maxVisited, onStepClick }: StepI
                             {/* Serif numeral: the step's identity */}
                             <span
                                 className={cn(
-                                    "font-serif text-lg tabular-nums",
-                                    isActive ? "text-primary" : isDone ? "text-foreground" : "text-muted-foreground/40"
+                                    "text-lg tabular-nums",
+                                    isActive ? "text-primary-text" : isDone ? "text-foreground" : "text-muted-foreground/40"
                                 )}
                             >
                                 {String(i + 1).padStart(2, "0")}
                             </span>
                             <span
                                 className={cn(
-                                    "hidden text-[10px] font-medium uppercase tracking-[0.2em] sm:block",
+                                    "hidden text-[13px] font-semibold sm:block",
                                     isActive ? "text-foreground" : "text-muted-foreground"
                                 )}
                             >

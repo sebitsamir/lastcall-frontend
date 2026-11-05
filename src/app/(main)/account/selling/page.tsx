@@ -106,7 +106,7 @@ export default function SellingPage() {
 
     /* ── Render ──────────────────────────────────────────────────────────── */
     return (
-        <div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-10 md:px-8">
+        <div className="mx-auto w-full max-w-5xl space-y-8 px-[clamp(16px,3vw,32px)] py-7">
             <SectionHeading
                 overline="Your inventory"
                 title="Selling"
@@ -144,9 +144,9 @@ export default function SellingPage() {
             )}
 
             {status === "ready" && lots.length > 0 && (
-                <div className="border border-border bg-card">
+                <div className="overflow-hidden rounded-card border border-border bg-card">
                     {/* Table Header (Desktop only) */}
-                    <div className="hidden items-center gap-4 border-b border-border bg-secondary/30 px-4 py-2 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground md:flex">
+                    <div className="hidden items-center gap-4 border-b border-border bg-secondary/30 px-4 py-2 text-[13px] font-semibold text-muted-foreground md:flex">
                         <div className="flex-1">Lot</div>
                         <div className="w-24 text-right">Status</div>
                         <div className="w-24 text-right">Current Bid</div>
@@ -182,7 +182,7 @@ export default function SellingPage() {
 /** Mirrors the row geometry for a seamless loading transition. */
 function SellingSkeleton() {
     return (
-        <div className="border border-border bg-card">
+        <div className="overflow-hidden rounded-card border border-border bg-card">
             <div className="hidden items-center gap-4 border-b border-border bg-secondary/30 px-4 py-2 md:flex">
                 <div className="flex-1"><Skeleton className="h-3 w-12" /></div>
                 <div className="w-24"><Skeleton className="ml-auto h-3 w-10" /></div>

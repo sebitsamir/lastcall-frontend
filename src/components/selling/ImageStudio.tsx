@@ -81,8 +81,8 @@ export function ImageStudio({ images, onAdd, onRemove }: ImageStudioProps) {
                     void handleFiles(e.dataTransfer.files);
                 }}
                 className={cn(
-                    "flex flex-col items-center justify-center gap-3 border border-dashed px-6 py-12 text-center transition-colors",
-                    dragActive ? "border-primary bg-primary/5" : "border-border bg-card/40"
+                    "flex flex-col items-center justify-center gap-3 rounded-card border border-dashed px-6 py-12 text-center transition-colors",
+                    dragActive ? "border-primary-text bg-primary/10" : "border-border-strong bg-card"
                 )}
             >
                 <ImagePlus className="h-6 w-6 text-muted-foreground" strokeWidth={1.5} />
@@ -95,7 +95,7 @@ export function ImageStudio({ images, onAdd, onRemove }: ImageStudioProps) {
                 <button
                     type="button"
                     onClick={() => inputRef.current?.click()}
-                    className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+                    className="text-xs font-medium text-primary-text underline-offset-4 hover:underline"
                 >
                     Browse files
                 </button>
@@ -118,12 +118,12 @@ export function ImageStudio({ images, onAdd, onRemove }: ImageStudioProps) {
             {(images.length > 0 || uploading > 0) && (
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                     {images.map((url, i) => (
-                        <div key={url} className="group relative aspect-square overflow-hidden border border-border bg-secondary">
+                        <div key={url} className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-secondary">
                             <img src={url} alt={`Lot image ${i + 1}`} className="h-full w-full object-cover" />
 
                             {/* The first image leads everywhere — say so */}
                             {i === 0 && (
-                                <span className="absolute left-1.5 top-1.5 border border-primary/40 bg-background/80 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em] text-primary">
+                                <span className="absolute left-1.5 top-1.5 border rounded-full border-0 bg-background/85 px-2 py-0.5 text-[11px] font-semibold text-primary-text">
                                     Cover
                                 </span>
                             )}
@@ -132,7 +132,7 @@ export function ImageStudio({ images, onAdd, onRemove }: ImageStudioProps) {
                                 type="button"
                                 onClick={() => onRemove(url)}
                                 aria-label="Remove image"
-                                className="absolute right-1.5 top-1.5 border border-border bg-background/80 p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                                className="absolute right-1.5 top-1.5 rounded-full bg-background/85 p-1.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
                             >
                                 <X className="h-3 w-3" strokeWidth={1.5} />
                             </button>
@@ -141,7 +141,7 @@ export function ImageStudio({ images, onAdd, onRemove }: ImageStudioProps) {
 
                     {/* Ghost tiles: the upload is visible, not a mystery spinner */}
                     {Array.from({ length: uploading }, (_, i) => (
-                        <div key={`ghost-${i}`} className="flex aspect-square items-center justify-center border border-border bg-secondary">
+                        <div key={`ghost-${i}`} className="flex aspect-square items-center justify-center rounded-2xl bg-secondary">
                             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" strokeWidth={1.5} />
                         </div>
                     ))}

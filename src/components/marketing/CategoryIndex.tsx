@@ -1,38 +1,39 @@
-/**
- * CATEGORY INDEX
- * Hairline-grid index of categories. Each cell deep-links into the Auctions
- * page using the `?category=` param that Chunk 3 already understands —
- * navigation and filtering share one contract.
- *
- * Technique: `gap-px` + `bg-border` produces 1px interior lines without
- * double borders — the editorial "table" look.
- */
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import { AUCTION_CATEGORIES } from "@/lib/api/auctions";
+
+const CATEGORY_IMAGES: Record<(typeof AUCTION_CATEGORIES)[number], string> = {
+    Art: "/categories/art.jpg",
+    Watches: "/categories/watches.jpg",
+    Electronics: "/categories/electronics.jpg",
+    Collectibles: "/categories/collectibles.jpg",
+    Fashion: "/categories/fashion.jpg",
+    Sports: "/categories/sports.jpg",
+};
 
 export function CategoryIndex() {
     return (
-        <div className="grid grid-cols-2 gap-px border border-border bg-border md:grid-cols-3">
-            {AUCTION_CATEGORIES.map((category) => (
+        <div className="grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-6 sm:gap-x-4 sm:gap-y-4">
+            {AUCTION_CATEGORIES.map((category, index) => (
                 <Link
                     key={category}
                     href={`/auctions?category=${encodeURIComponent(category)}`}
-                    className="group flex items-center justify-between bg-background p-6 transition-colors hover:bg-card"
+                    className="group flex flex-col items-center gap-2.5 text-center"
                 >
-                    <div>
-                        {/* Serif name — categories are editorial, not metadata */}
-                        <p className="font-serif text-lg text-foreground">{category}</p>
-                        <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-                            View Lots
-                        </p>
-                    </div>
-
-                    {/* Quiet affordance, revealed on intent */}
-                    <ArrowUpRight
-                        className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
-                        strokeWidth={1.5}
-                    />
+                    <span className="relative aspect-square w-full max-w-[112px] overflow-hidden rounded-[20px] border border-border bg-secondary shadow-sm transition-[transform,border-color,box-shadow] duration-300 ease-out-soft group-hover:-translate-y-1 group-hover:border-primary/40 group-hover:shadow-lift sm:max-w-none">
+                        <Image
+                            src={CATEGORY_IMAGES[category]}
+                            alt={category}
+                            fill
+                            sizes="(min-width: 640px) 160px, 30vw"
+                            quality={70}
+                            priority={index < 3}
+                            className="object-cover transition-transform duration-700 ease-out-soft group-hover:scale-110"
+                        />
+                    </span>
+                    <span className="text-[13px] font-medium leading-none text-foreground transition-colors group-hover:text-primary-text">
+                        {category}
+                    </span>
                 </Link>
             ))}
         </div>
