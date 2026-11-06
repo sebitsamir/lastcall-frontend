@@ -60,8 +60,9 @@ export function HeroLot({ auctions, className }: HeroLotProps) {
                             src={auction.images?.[0]}
                             alt={auction.title}
                             eager
-                            sizes="(min-width: 900px) 50vw, 100vw"
-                            className="animate-ken-burns"
+                            fit="contain"
+                            quality={90}
+                            sizes="(min-width: 900px) 55vw, 100vw"
                         />
                         <div
                             className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent"

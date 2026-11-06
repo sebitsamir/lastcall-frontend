@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Package } from "lucide-react";
 import { toast } from "sonner";
+import { getApiErrorMessage } from "@/lib/api/errors";
 
 import type { IAuction } from "@/types";
 import { auctionsApi } from "@/lib/api/auctions";
@@ -97,8 +98,8 @@ export default function SellingPage() {
             toast.success("Lot withdrawn. Bidders have been refunded.");
             setDialogTarget(null);
             load(); // Refresh the list to reflect the new state
-        } catch {
-            toast.error("Couldn't withdraw the lot. Try again.");
+        } catch (error) {
+            toast.error(getApiErrorMessage(error, "Couldn't withdraw the lot. Try again."));
         } finally {
             setCancellingId(null);
         }

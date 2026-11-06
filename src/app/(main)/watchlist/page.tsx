@@ -14,6 +14,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { toast } from "sonner";
+import { getApiErrorMessage } from "@/lib/api/errors";
+import { isLiveLot } from "@/lib/auction/status";
 
 import type { IAuction } from "@/types";
 import { watchlistApi } from "@/lib/api/watchlist";
@@ -31,10 +33,12 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { WatchListRow } from "@/components/watchlist/WatchListRow";
+import { useNow } from "@/hooks/useNow";
 
 export default function WatchlistPage() {
     const { user } = useAuthStore();
     const userId = (user as { _id?: string } | null)?._id;
+    const now = useNow(1_000);
 
     const [lots, setLots] = useState<IAuction[]>([]);
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -91,10 +95,10 @@ export default function WatchlistPage() {
         try {
             await watchlistApi.toggle(auctionId);
             toast.success("Removed from watchlist");
-        } catch {
+        } catch (error) {
             // 2. Rollback + explanation: the UI never lies about server truth.
             setLots((prev) => sortWatchlist([removed, ...prev]));
-            toast.error("Couldn't update your watchlist");
+            toast.error(getApiErrorMessage(error, "Couldn't update your watchlist"));
         } finally {
             setPendingId(null);
         }
@@ -105,8 +109,8 @@ export default function WatchlistPage() {
         () =>
             lots.filter(
                 (l) =>
-                    l.status === "active" &&
-                    new Date(l.endTime).getTime() - Date.now() <= ENDING_SOON_MS
+                    isLiveLot(l, now) &&
+                    new Date(l.endTime).getTime() - now <= ENDING_SOON_MS
             ).length,
         [lots]
     );

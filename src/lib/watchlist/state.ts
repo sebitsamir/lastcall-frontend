@@ -16,6 +16,7 @@
  * ────────────────────────────────────────────────────────────────────────────
  */
 import type { IAuction } from "@/types";
+import { displayStatus } from "@/lib/auction/status";
 
 export type WatchState =
     | "winning"
@@ -38,9 +39,10 @@ export function deriveWatchState(
     userId: string | undefined,
     bidAuctionIds: Set<string>
 ): WatchState {
-    // Terminal states win outright — time pressure is irrelevant.
-    if (auction.status === "cancelled") return "cancelled";
-    if (auction.status !== "active") return "ended";
+    const status = displayStatus(auction);
+    if (status === "cancelled") return "cancelled";
+    if (status === "upcoming") return "watching";
+    if (status !== "active") return "ended";
 
     // Highest bidder may arrive populated (object) or as a bare id string.
     const highest = (auction as Record<string, unknown>).highestBidder as
@@ -65,12 +67,18 @@ export function deriveWatchState(
  */
 export function sortWatchlist(lots: IAuction[]): IAuction[] {
     return [...lots].sort((a, b) => {
-        const aActive = a.status === "active" ? 0 : 1;
-        const bActive = b.status === "active" ? 0 : 1;
-        if (aActive !== bActive) return aActive - bActive; // never mutate the prop
+        const rank = (lot: IAuction) => {
+            const status = displayStatus(lot);
+            if (status === "active") return 0;
+            if (status === "upcoming") return 1;
+            return 2;
+        };
+        const aRank = rank(a);
+        const bRank = rank(b);
+        if (aRank !== bRank) return aRank - bRank;
 
         const aT = new Date(a.endTime).getTime();
         const bT = new Date(b.endTime).getTime();
-        return aActive === 0 ? aT - bT : bT - aT; // active ↑ urgency, closed ↓ recency
+        return aRank < 2 ? aT - bT : bT - aT;
     });
 }

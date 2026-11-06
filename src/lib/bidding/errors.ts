@@ -23,7 +23,8 @@ export function classifyBidError(error: unknown): BidFailure {
     if (/higher than|at least|too low|minimum/.test(m)) return { kind: "tooLow", message };
     if (/insufficient|balance|funds/.test(m)) return { kind: "insufficientFunds", message };
     if (/seller|own auction/.test(m)) return { kind: "seller", message };
-    if (/ended|closed|not active|finished/.test(m)) return { kind: "closed", message };
+    if (/has not started|not started/.test(m)) return { kind: "unknown", message };
+    if (/ended|closed|not active|finished|not currently accepting/.test(m)) return { kind: "closed", message };
 
     return { kind: "unknown", message };
 }

@@ -13,7 +13,9 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 import { walletApi } from "@/lib/api/wallet";
+import { getApiErrorMessage } from "@/lib/api/errors";
 import { formatMoney } from "@/lib/formatting/format";
+import { MAX_DEPOSIT, MIN_DEPOSIT } from "@/lib/wallet/limits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -49,18 +51,25 @@ export function AddFundsDialog({ open, onOpenChange, onSuccess }: AddFundsDialog
     }, [open, onOpenChange]);
 
     const parsed = Number(amount);
-    const valid = Number.isFinite(parsed) && parsed > 0;
+    const valid = Number.isFinite(parsed) && parsed >= MIN_DEPOSIT;
+    const overMax = valid && parsed > MAX_DEPOSIT;
 
     const submit = async () => {
         if (!valid || submitting) return;
+        if (overMax) {
+            toast.error(`Maximum deposit is ${formatMoney(MAX_DEPOSIT)}.`);
+            return;
+        }
         setSubmitting(true);
         try {
             await walletApi.deposit(parsed);
             toast.success(`${formatMoney(parsed)} added to your available balance`);
             onOpenChange(false);
             onSuccess(); // refresh balances + ledger
-        } catch {
-            toast.error("Deposit failed. Try again.");
+        } catch (error) {
+            toast.error(
+                getApiErrorMessage(error, `Deposit failed. Maximum deposit is ${formatMoney(MAX_DEPOSIT)}.`)
+            );
         } finally {
             setSubmitting(false);
         }
@@ -84,7 +93,8 @@ export function AddFundsDialog({ open, onOpenChange, onSuccess }: AddFundsDialog
                 <div className="space-y-1">
                     <h2 className="text-xl text-foreground">Add Funds</h2>
                     <p className="text-sm text-muted-foreground">
-                        Funds land in your available balance instantly.
+                        Funds land in your available balance instantly. Maximum deposit is{" "}
+                        {formatMoney(MAX_DEPOSIT)}.
                     </p>
                 </div>
 
@@ -108,15 +118,22 @@ export function AddFundsDialog({ open, onOpenChange, onSuccess }: AddFundsDialog
 
                 <Input
                     type="number"
-                    min={1}
+                    min={MIN_DEPOSIT}
+                    max={MAX_DEPOSIT}
                     inputMode="numeric"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     aria-label="Deposit amount"
+                    aria-invalid={overMax || undefined}
                 />
+                {overMax && (
+                    <p className="text-sm text-destructive">
+                        Maximum deposit is {formatMoney(MAX_DEPOSIT)}.
+                    </p>
+                )}
 
                 <div className="flex gap-3">
-                    <Button className="flex-1" loading={submitting} disabled={!valid} onClick={submit}>
+                    <Button className="flex-1" loading={submitting} disabled={!valid || overMax} onClick={submit}>
                         Add Funds
                     </Button>
                     <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={submitting}>

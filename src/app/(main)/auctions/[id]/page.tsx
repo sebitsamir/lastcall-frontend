@@ -20,7 +20,7 @@ import type { IAuction } from "@/types";
 import { auctionsApi } from "@/lib/api/auctions";
 import { bidsApi, type BidRecord } from "@/lib/api/bids";
 import { subscribeToAuction } from "@/lib/socket/auctionSocket";
-import type { NewBidPayload, OutbidPayload, AuctionEndedPayload } from "@/lib/socket/events";
+import type { NewBidPayload, OutbidPayload, AuctionEndedPayload, AuctionStartedPayload } from "@/lib/socket/events";
 import { displayStatus } from "@/lib/auction/status";
 import { formatMoney, lotNumber } from "@/lib/formatting/format";
 import { useAuthStore } from "@/store/authStore";
@@ -143,6 +143,12 @@ export default function AuctionDetailPage() {
                     prev
                         ? { ...prev, status: (payload.status as IAuction["status"]) || "completed" }
                         : prev
+                );
+            },
+            onAuctionStarted: (payload: AuctionStartedPayload) => {
+                if (payload.auctionId !== auctionId) return;
+                setAuction((prev) =>
+                    prev ? { ...prev, status: "active" } : prev
                 );
             },
         });

@@ -12,6 +12,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { getApiErrorMessage } from "@/lib/api/errors";
 
 import { useAuthStore } from "@/store/authStore";
 import { usersApi } from "@/lib/api/users";
@@ -55,8 +56,8 @@ export default function ProfilePage() {
             await usersApi.updateProfile({ name: name.trim() });
             toast.success("Profile updated");
             void initializeAuth(); // refetch /users/me → global agreement
-        } catch {
-            toast.error("Couldn't update your profile");
+        } catch (error) {
+            toast.error(getApiErrorMessage(error, "Couldn't update your profile"));
         } finally {
             setSaving(false);
         }

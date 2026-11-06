@@ -14,6 +14,7 @@ import Link from "next/link";
 import { Gavel } from "lucide-react";
 
 import { usersApi, type MyBid } from "@/lib/api/users";
+import { isLiveLot } from "@/lib/auction/status";
 import { useAuthStore } from "@/store/authStore";
 import { formatMoney } from "@/lib/formatting/format";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +40,7 @@ export function ActiveBids() {
             .then((result) => {
                 if (id !== requestId.current) return;
                 // Only live positions belong here; history lives in the ledger.
-                setBids(result.filter((b) => b.auction?.status === "active"));
+                setBids(result.filter((b) => b.auction && isLiveLot(b.auction)));
                 setStatus("ready");
             })
             .catch(() => {

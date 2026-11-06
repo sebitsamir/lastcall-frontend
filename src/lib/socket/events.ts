@@ -14,6 +14,8 @@ export const SOCKET_EVENTS = {
     outbid: "outbid",
     /** Server → room: the lot closed and settlement ran. */
     auctionEnded: "auctionEnded",
+    /** Server → room: a scheduled lot reached startTime and is now live. */
+    auctionStarted: "auctionStarted",
 } as const;
 
 /** Payload broadcast to the auction room when a bid is accepted. */
@@ -39,4 +41,9 @@ export interface AuctionEndedPayload {
     winnerId?: string;
     winningBid?: number;
     message?: string;
+}
+
+export interface AuctionStartedPayload {
+    auctionId: string;
+    status: "active" | string;
 }

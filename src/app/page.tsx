@@ -33,7 +33,7 @@ import { useNow } from "@/hooks/useNow";
 /** One request feeds the whole page; 12 keeps the grid balanced. */
 const HOME_LIMIT = 12;
 
-/** The hero carousel rotates through the three most urgent live lots. */
+/** The hero carousel rotates through the three most urgent live and upcoming lots. */
 const HERO_LOTS = 3;
 
 /** Shared page gutter (design `.w`). */
@@ -74,8 +74,7 @@ export default function HomePage() {
   }, [load]);
 
   /* ── Derived slices (pure, memoized) ──────────────────────────────────── */
-  // The UI only ever presents ACTIVE lots on the homepage; other states
-  // belong to the Auctions page and the account surfaces.
+  // The floor (live + upcoming) stays visible; lots flip to Live when startTime hits.
   const floor = useMemo(
     () => auctions.filter((a) => isOpenLot(a, now)),
     [auctions, now]
@@ -86,7 +85,7 @@ export default function HomePage() {
     [floor, now]
   );
 
-  const heroLots = useMemo(() => active.slice(0, HERO_LOTS), [active]);
+  const heroLots = useMemo(() => floor.slice(0, HERO_LOTS), [floor]);
 
   // The sell band borrows a real lot photo when one exists.
   const bandLot = active[1] ?? active[0] ?? null;
