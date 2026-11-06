@@ -24,7 +24,7 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, dot, className, endTime, startTime }: StatusBadgeProps) {
-    const now = useNow(30_000);
+    const now = useNow(1_000);
     const resolved = displayStatus(
         {
             status: (status as AuctionStatus) || "completed",

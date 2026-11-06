@@ -13,6 +13,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { toast } from "sonner";
+import { getApiErrorMessage } from "@/lib/api/errors";
 
 import { watchlistApi } from "@/lib/api/watchlist";
 import { cn } from "@/lib/utils";
@@ -44,9 +45,9 @@ export function WatchlistButton({
         try {
             await watchlistApi.toggle(auctionId);
             toast.success(next ? "Added to watchlist" : "Removed from watchlist");
-        } catch {
+        } catch (error) {
             setWatching(!next); // rollback — the UI never lies
-            toast.error("Couldn't update your watchlist");
+            toast.error(getApiErrorMessage(error, "Couldn't update your watchlist"));
         } finally {
             setBusy(false);
         }

@@ -16,6 +16,8 @@ import { Edit, Eye, X } from "lucide-react";
 
 import type { IAuction } from "@/types";
 import { formatMoney } from "@/lib/formatting/format";
+import { displayStatus } from "@/lib/auction/status";
+import { useNow } from "@/hooks/useNow";
 import { StatusBadge } from "@/components/auction/StatusBadge";
 import { CountdownTimer } from "@/components/auction/CountdownTimer";
 import { Button } from "@/components/ui/button";
@@ -35,8 +37,10 @@ export function SellerLotRow({
     onEdit,
     onCancelRequest,
 }: SellerLotRowProps) {
-    const isUpcoming = auction.status === "upcoming";
-    const isActive = auction.status === "active";
+    const now = useNow(1_000);
+    const resolved = displayStatus(auction, now);
+    const isUpcoming = resolved === "upcoming";
+    const isActive = resolved === "active";
     const canEdit = isUpcoming;
     const canCancel = isUpcoming || isActive;
 
@@ -75,13 +79,16 @@ export function SellerLotRow({
 
             {/* ── Status & Time ── */}
             <div className="flex w-full items-center justify-between gap-4 md:w-auto md:flex-col md:items-end md:gap-1">
-                <StatusBadge status={auction.status} dot={isActive} />
-                {isActive ? (
-                    <CountdownTimer endTime={auction.endTime} className="text-xs" />
+                <StatusBadge
+                    status={auction.status}
+                    startTime={auction.startTime}
+                    endTime={auction.endTime}
+                    dot={isActive}
+                />
+                {isUpcoming || isActive ? (
+                    <CountdownTimer startTime={auction.startTime} endTime={auction.endTime} className="text-xs" />
                 ) : (
-                    <span className="text-xs text-muted-foreground">
-                        {isUpcoming ? "Starts soon" : "Closed"}
-                    </span>
+                    <span className="text-xs text-muted-foreground">Closed</span>
                 )}
             </div>
 

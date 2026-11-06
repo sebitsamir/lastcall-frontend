@@ -12,6 +12,7 @@ import {
     type NewBidPayload,
     type OutbidPayload,
     type AuctionEndedPayload,
+    type AuctionStartedPayload,
 } from "./events";
 
 interface SubscribeOptions {
@@ -19,6 +20,7 @@ interface SubscribeOptions {
     onNewBid?: (payload: NewBidPayload) => void;
     onOutbid?: (payload: OutbidPayload) => void;
     onAuctionEnded?: (payload: AuctionEndedPayload) => void;
+    onAuctionStarted?: (payload: AuctionStartedPayload) => void;
 }
 
 export function subscribeToAuction({
@@ -26,6 +28,7 @@ export function subscribeToAuction({
     onNewBid,
     onOutbid,
     onAuctionEnded,
+    onAuctionStarted,
 }: SubscribeOptions): () => void {
     const socket = getSocket();
 
@@ -34,10 +37,12 @@ export function subscribeToAuction({
     if (onNewBid) socket.on(SOCKET_EVENTS.newBid, onNewBid);
     if (onOutbid) socket.on(SOCKET_EVENTS.outbid, onOutbid);
     if (onAuctionEnded) socket.on(SOCKET_EVENTS.auctionEnded, onAuctionEnded);
+    if (onAuctionStarted) socket.on(SOCKET_EVENTS.auctionStarted, onAuctionStarted);
 
     return () => {
         if (onNewBid) socket.off(SOCKET_EVENTS.newBid, onNewBid);
         if (onOutbid) socket.off(SOCKET_EVENTS.outbid, onOutbid);
         if (onAuctionEnded) socket.off(SOCKET_EVENTS.auctionEnded, onAuctionEnded);
+        if (onAuctionStarted) socket.off(SOCKET_EVENTS.auctionStarted, onAuctionStarted);
     };
 }

@@ -14,6 +14,8 @@ interface AuctionImageProps {
     eager?: boolean;
     className?: string;
     fallback?: "default" | "compact";
+    fit?: "cover" | "contain";
+    quality?: number;
 }
 
 export function AuctionImage({
@@ -23,6 +25,8 @@ export function AuctionImage({
     eager = false,
     className,
     fallback = "default",
+    fit = "cover",
+    quality = 75,
 }: AuctionImageProps) {
     const normalizedSrc =
         typeof src === "string"
@@ -82,15 +86,16 @@ export function AuctionImage({
                 alt={alt}
                 fill
                 sizes={sizes}
-                quality={75}
+                quality={quality}
                 loader={cloudinaryLoader}
-                loading={eager ? "eager" : "lazy"}
+                priority={eager}
+                loading={eager ? undefined : "lazy"}
                 fetchPriority={eager ? "high" : "auto"}
                 onError={() => {
                     setFailedSrc(normalizedSrc);
                 }}
                 className={cn(
-                    "object-cover",
+                    fit === "contain" ? "object-contain" : "object-cover",
                     className
                 )}
             />
@@ -103,14 +108,15 @@ export function AuctionImage({
             alt={alt}
             fill
             sizes={sizes}
-            quality={75}
-            loading={eager ? "eager" : "lazy"}
+            quality={quality}
+            priority={eager}
+            loading={eager ? undefined : "lazy"}
             fetchPriority={eager ? "high" : "auto"}
             onError={() => {
                 setFailedSrc(normalizedSrc);
             }}
             className={cn(
-                "object-cover",
+                fit === "contain" ? "object-contain" : "object-cover",
                 className
             )}
         />

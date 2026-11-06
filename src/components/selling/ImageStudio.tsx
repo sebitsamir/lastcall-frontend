@@ -13,6 +13,7 @@
 import { useRef, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
+import { getApiErrorMessage } from "@/lib/api/errors";
 
 import { uploadsApi, UPLOAD_LIMITS } from "@/lib/api/uploads";
 import { cn } from "@/lib/utils";
@@ -58,8 +59,8 @@ export function ImageStudio({ images, onAdd, onRemove }: ImageStudioProps) {
             try {
                 const url = await uploadsApi.uploadImage(file);
                 onAdd(url);
-            } catch {
-                toast.error(`Couldn't upload ${file.name}`);
+            } catch (error) {
+                toast.error(getApiErrorMessage(error, `Couldn't upload ${file.name}`));
             } finally {
                 setUploading((n) => n - 1);
             }

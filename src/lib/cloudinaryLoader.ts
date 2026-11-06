@@ -16,7 +16,7 @@ export default function cloudinaryLoader({
 
     const transformation = [
         "f_auto",
-        "q_auto",
+        "q_auto:good",
         `c_limit,w_${width}`,
     ].join("/");
 

@@ -13,8 +13,10 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { getApiErrorMessage } from "@/lib/api/errors";
 
 import { auctionsApi, AUCTION_CATEGORIES, type AuctionDraftPayload } from "@/lib/api/auctions";
+import { displayStatus } from "@/lib/auction/status";
 import { formatMoney } from "@/lib/formatting/format";
 import { useAuthStore } from "@/store/authStore";
 
@@ -83,7 +85,7 @@ function Wizard() {
     useEffect(() => {
         if (!editId) return;
         auctionsApi.getById(editId).then((a) => {
-            if (a.status !== "upcoming") {
+            if (displayStatus(a) !== "upcoming") {
                 // Backend rule mirrored: live lots are not editable.
                 setEditLocked(true);
                 return;
@@ -98,7 +100,7 @@ function Wizard() {
                 endTime: a.endTime ? toLocalInput(a.endTime) : "",
             });
             setMaxVisited(STEPS.length - 1); // revising sellers may jump freely
-        }).catch(() => toast.error("Couldn't load the auction for editing"));
+        }).catch((error) => toast.error(getApiErrorMessage(error, "Couldn't load the auction for editing")));
     }, [editId]);
 
     /* ── Per-step validation (client mirrors; server is authoritative) ───── */
@@ -169,8 +171,13 @@ function Wizard() {
                 toast.success("Your lot is live on the floor");
                 router.push(`/auctions/${created._id}`);
             }
-        } catch {
-            toast.error(editId ? "Couldn't update the auction" : "Couldn't publish the auction");
+        } catch (error) {
+            toast.error(
+                getApiErrorMessage(
+                    error,
+                    editId ? "Couldn't update the auction" : "Couldn't publish the auction"
+                )
+            );
         } finally {
             setSubmitting(false);
         }
